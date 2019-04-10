@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<link href="../static/nv.d3.min.css" rel="stylesheet">
+<script src="../static/nv.d3.min.js"></script>
+
+<style type="text/css">
+
+path:hover {
+	fill-opacity: .7;
+}
+
+div.tooltip {
+ 	position: absolute;
+	text-align: center;
+	width: 60px;
+	height: 28px;
+	padding: 2px;
+	font: 12px sans-serif;
+	background: white;
+	border: 0px;
+	border-radius: 8px;
+	pointer-events: none;
+}
+
+div.maindiv {
+    text-align: center;
+}
+
+div.stat {
+    position: absolute;
+    width: 100%;
+    height: 600px;
+    padding: 2px;
+	font: 12px sans-serif;
+	background: white;
+	border: 0px;
+	border-radius: 8px;
+	pointer-events: none;
+}
+
+body {
+	font: 11px sans-serif;
+}
+
+.legend {
+	position:absolute;
+	left:800px;
+	top:350px;
+    opacity: 0;
+}
+
+#chart svg {
+    position: absolute;
+    width: 400px;
+    height: 200px;
+}
+
+div.typo {
+    position:absolute;
+    top:350px;
+    width: 350px;
+    height: 180px;
+    background: black;
+    border: 1px;
+    border-color: #f3faff;
+    border-radius: 10px;
+    padding: 5px;
+}
+
+div.twit_area {
+    position:absolute;
+    width: 350px;
+    height: inherit;
+    /*background: black;*/
+    border: 1px;
+    border-color: #f3faff;
+    border-radius: 10px;
+    padding: 5px;
+    overflow: scroll;
+}
+
+p.twit {
+    width: 300px;
+    margin: 10px;
+    padding: 5px;
+    border: 1px;
+    border-color: #f3faff;
+    border-radius: 10px;
+    background: black;
+    word-break: break-all;
+}
+
+</style>
+</head>
+<body>
+<h1 style="text-align: center; margin-top: 30px;"> Sneak peak on Korean </h1>
+<script type="text/javascript">
+
+//Width and height of map
+var width = 960;
+var height = 500;
+
+// D3 Projection
+var projection = d3.geo.albersUsa()
+				   .translate([width/2, height/2])    // translate to center of screen
+				   .scale([1000]);          // scale things down so see entire US
+
+// Define path generator
+var path = d3.geo.path()               // path generator that will convert GeoJSON to SVG paths
+		  	 .projection(projection);  // tell path generator to use albersUsa projection
+
+
+var modal_stat = d3.select("body")
+    .append("div")
+    .attr("class", "stat")
+    .style("opacity", 0);
+
+var in_modal_stats = modal_stat.append("div")
+    .attr("id", "chart")
+    .append("svg");
+
+var in_modal_typo = modal_stat.append("div")
+    .attr("class", "typo");
+
+var in_modal_twitarea = modal_stat.append("div")
+    .attr("class", "twit_area");
+
+in_modal_twitarea.append("font")
+    .attr("color", "black")
+    .style("font-size", "26px")
+    .style("margin", "1px")
+    .style("font-family","Arial, Helvetica, sans-serif")
+    .text("twits:");
+
+var chart;
+var stat_data;
+var typo_data;
+var twits;
+
+d3.json("../static/typos.json", function(data) {
+    typo_data = data;
+});
+
+d3.json("../static/twits.json", function(data) {
+    twits = data;
+});
+
+d3.json("../static/stats_local.json", function(data) {
+    stat_data = data;
+    nv.addGraph(function() {
+        chart = nv.models.lineChart()
+            .x(function(d) {
+                return d[0] })
+            .y(function(d) { return d[1]})
+            .color(d3.scale.category10().range());
+
+        chart.xAxis     //Chart x-axis settings
+            .axisLabel('Timestamp')
+            .tickFormat(d3.format(',r'));
+
+
+       chart.yAxis.tickFormat(d3.format('.0f'));
+
+        nv.utils.windowResize(chart.update);
+
+        return chart;
+    });
+});
+
+var legendText = ["Cities Lived", "States Lived", "States Visited", "Nada"];
+
+var svg = d3.select("body")
+    .append("div")
+    .attr("class", "maindiv")
+			.append("svg")
+			.attr("width", width)
+			.attr("height", height);
+
+var div = d3.select("body")
+		    .append("div")
+    		.attr("class", "tooltip")
+    		.style("opacity", 0);
+
+d3.json("../static/states_sent_stats.json", function(states_sent) {
+
+    // Load GeoJSON data and merge with states data
+    d3.json("../static/us-states.json", function (json) {
+        // Bind the data to the SVG and create one path per GeoJSON feature
+        svg.selectAll("path")
+            .data(json.features)
+            .enter()
+            .append("path")
+            .attr("d", path)
+            .style("stroke", "#fff")
+            .style("stroke-width", "1")
+            .on("mouseover", function (d) {
+                console.log(screen.width / 2)
+                console.log(screen.width / 2 - width/4)
+                in_modal_typo.style("left", screen.width / 2 - width/4 - 350 + 30 + "px")
+                in_modal_stats.style("left", screen.width / 2 - width/4 - 350 + "px")
+                in_modal_twitarea.style("left", screen.width / 2 + screen.width / 10 + "px")
+                __typo_data = typo_data[d["id"]];
+                __twit_data = twits[d["id"]];
+
+                for (var i = 0; i < __typo_data.length; i++) {
+                    var color = "#ff9bbd";
+                    if (__typo_data[i].key == "Positive")
+                        color = "#5aff37";
+                    else if (__typo_data[i].key == "Neutral")
+                        color = "#5afff8";
+
+                    in_modal_typo.append("font")
+                        .attr("class", "typos")
+                        .attr("color", color)
+                        .style("font-size", "18px")
+                        .style("margin", "1px")
+                        .style("font-family", "Arial, Helvetica, sans-serif")
+                        .text(__typo_data[i].value + " ");
+                }
+
+                for (var i = 0; i < __twit_data.length; i++) {
+                    in_modal_twitarea.append("p")
+                    // .append("font")
+                        .attr("class", "twit")
+                        .style("color", "white")
+                        .style("font-size", "18px")
+                        .style("font-family", "Arial, Helvetica, sans-serif")
+                        .text(__twit_data[i]);
+                }
+
+
+                d3.select('#chart svg')
+                    .datum(stat_data[d["id"]])
+                    .transition().duration(140)
+                    .call(chart);
+
+                modal_stat.transition()
+                    .duration(200)
+                    .style("opacity", .9);
+            })
+
+            // fade out tooltip on mouse out
+            .on("mouseout", function (d) {
+                modal_stat.transition()
+                    .duration(150)
+                    .style("opacity", 0);
+                // d3.transition().duration(150).selectAll(".typos").remove()
+                // d3.transition().duration(150).selectAll(".twit").remove()
+                d3.selectAll(".typos").remove()
+                d3.selectAll(".twit").remove()
+            })
+            .style("fill", function (d) {
+                color = states_sent[d.properties.name]
+                if (color == null)
+                    return "rgb(213,222,217)";
+
+                return color
+            });
+
+        d3.json("../static/twit_geo.json", function (data) {
+            svg.selectAll("circle")
+                .data(data["data"])
+                .enter()
+                .append("circle")
+                .attr("cx", function (d) {
+                    p = projection([d["lon"], d["lat"]])
+
+                    if (p != null)
+                        return projection([d["lon"], d["lat"]])[0];
+                    else
+                        console.log(d);
+                })
+                .attr("cy", function (d) {
+                    p = projection([d["lon"], d["lat"]])
+
+                    if (p != null)
+                        return projection([d["lon"], d["lat"]])[1];
+                    else
+                        console.log(d);
+                })
+                .attr("r", function (d) {
+                    return 1.5;
+                })
+                .style("fill", function (d) {
+                    if (d.key == "Positive")
+                        return "#5aff37"
+                    else if (d.key == "Negative")
+                        return "#ff0c10"
+                    else
+                        return "#5afff8"
+
+                })
+                .style("opacity", 0.85);
+
+        });
+    });
+});
+</script>
+</body>
+</html>
