@@ -6,6 +6,8 @@ from flask import Flask, render_template, request
 import logging
 from logging import Formatter, FileHandler
 import json
+from pymongo import MongoClient
+import redis
 import os
 
 #----------------------------------------------------------------------------#
@@ -14,6 +16,11 @@ import os
 
 app = Flask(__name__)
 app.config.from_object('config')
+
+MONGO_HOST = 'mongodb://admin:1234@localhost'
+
+mongo_cli = MongoClient(MONGO_HOST)
+redis_cli = redis.Redis(host='localhost', port=6379, db=0)
 
 #----------------------------------------------------------------------------#
 # Controllers.
@@ -51,6 +58,28 @@ if not app.debug:
     file_handler.setLevel(logging.INFO)
     app.logger.addHandler(file_handler)
     app.logger.info('errors')
+
+
+@app.route('/fetch', methods=['GET'])
+def get_stats_with_keyword(keyword):
+    # retain keyword expire time
+    redis_cli.set(keyword, keyword)
+    redis_cli.expire(keyword, 40)
+    redis_cli.sadd("keys", keyword)
+
+    # fetch stats data from mongod
+    db = mongo_cli.usa_db
+    coll = db.usa_tweets_nlp
+    dat = coll.find({"from": keyword})
+
+    # resp
+    ret = {
+        "code": 1000,
+        "message": "Statistic datum from {}".format(keyword),
+        "data": dat
+    }
+
+    return json.dumps(ret), 200
 
 #----------------------------------------------------------------------------#
 # Launch.
