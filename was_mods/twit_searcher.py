@@ -1,0 +1,62 @@
+
+from common import Tweetmanager
+import tweepy
+import twitter_credentials2
+import redis
+from pymongo import MongoClient
+import time
+
+def fetch_keyw_from(redis_cli):
+    ret = None
+    member_key = "search"
+
+    # fetch list with key
+    ll = redis_cli.smembers(member_key)
+
+    for keyword in ll:
+		redis_cli.srem(member_key, keyword)
+		_k = redis_cli.get(keyword)
+
+		if _k == None:
+			redis_cli.set(keyword, 1)
+			ret = keyword
+			break
+
+    return ret
+
+
+def search_tweets_with(mongo_cli, api, keyword):
+    # Find 'new' tweets (under hashtags/search terms)
+    # TODO: pages
+    tws = tweepy.Cursor(api.search, q=keyword, result_type="recent", lang="en", tweet_mode='extended').items()
+    print("Searching under term..." + keyword)
+
+    tw_mn = Tweetmanager(mongo_cli, keyword, 's')
+
+    # Like 'new' tweets (only if the user has more than 100 followers & less than 2500 tweets)
+    for tweet in tws:
+        if tw_mn.process(tweet._json) == None:
+			print("Error occurs...")
+
+if __name__ == '__main__':
+	MONGO_HOST = 'mongodb://admin:1234@ec2-13-125-208-40.ap-northeast-2.compute.amazonaws.com'
+
+	consumer_key = twitter_credentials2.CONSUMER_KEY
+	consumer_secret = twitter_credentials2.CONSUMER_SECRET
+	access_token = twitter_credentials2.ACCESS_TOKEN
+	access_token_secret = twitter_credentials2.ACCESS_TOKEN_SECRET
+
+	client = MongoClient(MONGO_HOST)
+	redis_cli = redis.Redis(host='localhost', port=6379, db=0)
+
+	auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+	auth.set_access_token(access_token, access_token_secret)
+
+
+	while(True):
+		ret = fetch_keyw_from(redis_cli)
+		if ret is None:
+			time.sleep(1)
+			continue
+
+		search_tweets_with(client, tweepy.API(auth), ret)
