@@ -1,19 +1,21 @@
 
 from common import Tweetmanager
 import tweepy
+import tweepy.error
 import twitter_credentials2
 import redis
 from pymongo import MongoClient
 import time
 
+
 def fetch_keyw_from(redis_cli):
-    ret = None
-    member_key = "search"
+	ret = None
+	member_key = "search"
 
-    # fetch list with key
-    ll = redis_cli.smembers(member_key)
+	# fetch list with key
+	ll = redis_cli.smembers(member_key)
 
-    for keyword in ll:
+	for keyword in ll:
 		redis_cli.srem(member_key, keyword)
 		_k = redis_cli.get(keyword)
 
@@ -22,21 +24,30 @@ def fetch_keyw_from(redis_cli):
 			ret = keyword
 			break
 
-    return ret
+	return ret
 
 
 def search_tweets_with(mongo_cli, api, keyword):
-    # Find 'new' tweets (under hashtags/search terms)
-    # TODO: pages
-    tws = tweepy.Cursor(api.search, q=keyword, result_type="recent", lang="en", tweet_mode='extended').items()
-    print("Searching under term..." + keyword)
+	# Find 'new' tweets (under hashtags/search terms)
+	# TODO: pages
+	tws = tweepy.Cursor(api.search, q=keyword, result_type="recent", lang="en", tweet_mode='extended').items(100)
+	print("Searching under term..." + keyword)
 
-    tw_mn = Tweetmanager(mongo_cli, keyword, 's')
+	tw_mn = Tweetmanager(mongo_cli, keyword, 's')
+	processed_cnt = 0
 
-    # Like 'new' tweets (only if the user has more than 100 followers & less than 2500 tweets)
-    for tweet in tws:
-        if tw_mn.process(tweet._json) == None:
-			print("Error occurs...")
+	try:
+		for tweet in tws:
+			ret, reason = tw_mn.process(tweet._json)
+			if ret == None:
+				print("Not handled: {0}".format(reason))
+
+		processed_cnt = processed_cnt + 1
+		print ("{} processed.".format(processed_cnt))
+
+	except tweepy.error.TweepError as e:
+		print str(e)
+
 
 if __name__ == '__main__':
 	MONGO_HOST = 'mongodb://admin:1234@ec2-13-125-208-40.ap-northeast-2.compute.amazonaws.com'

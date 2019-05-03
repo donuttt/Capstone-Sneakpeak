@@ -1,4 +1,6 @@
 
+import pymongo.errors
+
 class Tweetmanager():
 
 	def __init__(self, mongo_cli, keywords, _type='r'):
@@ -10,19 +12,19 @@ class Tweetmanager():
 
 	def process(self, source):
 		if 'retweeted_status' in source:
-			return None
+			return None, "Remove retweets."
 
 		reform_src = self._do_reformat_tweets(source)
 
 		mention = reform_src["mention"]
 
 		if 'is_quote_status' in source and source['is_quote_status']:
-			reform_src["quote"] = self.do_reformat_tweets(source["quoted_status"])
+			reform_src["quote"] = self._do_reformat_tweets(source["quoted_status"])
 			mention = reform_src["quote"]["mention"]
 
 		reform_src["search_word"] = self.catch_keyword(mention)
 		if reform_src["search_word"] == "":
-			return None
+			return None, "Remove which is not contain source keyword."
 
 		return self.insert_tweets(reform_src)
 
@@ -90,7 +92,12 @@ class Tweetmanager():
 
 	def insert_tweets(self, reform_src):
 		db = self.mongo_cli.usa_db
-		return db.usa_tweets_collection.insert_one(reform_src)
+		try:
+			ret = db.usa_tweets_collection.insert_one(reform_src)
+			return ret, ""
+
+		except pymongo.errors.DuplicateKeyError:
+			return True, "Key duplicated"
 
 	def _do_reformat_tweets(self, source):
 		if self._type == 'r':

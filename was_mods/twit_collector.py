@@ -34,7 +34,7 @@ class StreamListener(tweepy.StreamListener):
     def on_data(self, data):
         try:
             datajson = json.loads(data)
-            processed = self.tw_manager.process(datajson)
+            processed, reason = self.tw_manager.process(datajson)
 
             if processed is None:
                 return not self.stoping

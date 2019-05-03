@@ -8,6 +8,7 @@ from logging import Formatter, FileHandler
 import json
 from pymongo import MongoClient
 import redis
+from bson.json_util import dumps
 import os
 
 #----------------------------------------------------------------------------#
@@ -17,7 +18,7 @@ import os
 app = Flask(__name__)
 app.config.from_object('config')
 
-MONGO_HOST = 'mongodb://admin:1234@localhost'
+MONGO_HOST = 'mongodb://admin:1234@ec2-13-125-208-40.ap-northeast-2.compute.amazonaws.com'
 
 mongo_cli = MongoClient(MONGO_HOST)
 redis_cli = redis.Redis(host='localhost', port=6379, db=0)
@@ -61,7 +62,16 @@ if not app.debug:
 
 
 @app.route('/fetch', methods=['GET'])
-def get_stats_with_keyword(keyword):
+def get_stats_with_keyword():
+    keyword = request.args.get('k')
+    if keyword is None or keyword == "":
+        ret = {
+            "code": -1000,
+            "message": "Please serve keyword with your request!!",
+            "data": {}
+        }
+        return json.dumps(ret), 200
+
     # retain keyword expire time
     redis_cli.set(keyword, keyword)
     redis_cli.expire(keyword, 40)
@@ -70,13 +80,13 @@ def get_stats_with_keyword(keyword):
     # fetch stats data from mongod
     db = mongo_cli.usa_db
     coll = db.usa_tweets_nlp
-    dat = coll.find({"from": keyword})
+    dat = coll.find({"search_word": keyword}, {"keyword":1, "val":1, "_id":0}).sort('val', -1).limit(30)
 
     # resp
     ret = {
         "code": 1000,
         "message": "Statistic datum from {}".format(keyword),
-        "data": dat
+        "data": dumps(dat)
     }
 
     return json.dumps(ret), 200
