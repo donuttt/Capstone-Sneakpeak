@@ -1,0 +1,270 @@
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/data.js"></script>
+<script src="https://code.highcharts.com/modules/series-label.js"></script>
+<script src="https://code.highcharts.com/modules/sankey.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+
+<!-- Additional files for the Highslide popup effect -->
+<script src="https://www.highcharts.com/media/com_demo/js/highslide-full.min.js"></script>
+<script src="https://www.highcharts.com/media/com_demo/js/highslide.config.js" charset="utf-8"></script>
+<link rel="stylesheet" type="text/css" href="https://www.highcharts.com/media/com_demo/css/highslide.css" />
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+<script src="https://code.highcharts.com/maps/highmaps.js"></script>
+<script src="https://code.highcharts.com/maps/modules/data.js"></script>
+<script src="https://code.highcharts.com/maps/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/maps/modules/offline-exporting.js"></script>
+<script src="https://code.highcharts.com/mapdata/custom/world.js"></script>
+<script src="https://code.highcharts.com/stock/highstock.js"></script>
+<script src="https://code.highcharts.com/maps/modules/data.js"></script>
+<script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/stock/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/maps/modules/map.js"></script>
+<script src="https://code.highcharts.com/mapdata/custom/world.js"></script>
+<script src="https://code.highcharts.com/modules/wordcloud.js"></script>
+
+<style>
+#sankey {
+    min-width: 300px;
+    max-width: 800px;
+    height: 400px;
+    margin: 1em auto;
+    border: 1px solid silver;
+}
+
+</style>
+
+<div class="containerr">
+	<div class="row">
+		<div class="col-sm-6 col-md-6">
+			<div id="container1"></div>
+		</div>
+		<div class="col-sm-6 col-md-6">
+			<div id="container2">
+                <div id="sankey"></div>
+            </div>
+		</div>
+		<div class="col-sm-6 col-md-6">
+			<div id="container3"></div>
+		</div>
+		<div class="col-sm-6 col-md-6">
+			<div id="container4"></div>
+		</div>
+
+	</div>
+</div>
+
+<script type="text/javascript">
+
+	Highcharts.chart('container1', {
+
+		chart: {
+			scrollablePlotArea: {
+				minWidth: 700
+			}
+		},
+
+		data: {
+			csvURL: 'https://cdn.jsdelivr.net/gh/highcharts/highcharts@v7.0.0/samples/data/analytics.csv',
+			beforeParse: function (csv) {
+				return csv.replace(/\n\n/g, '\n');
+			}
+		},
+
+		title: {
+			text: 'Twitter Sentiment Analysis'
+		},
+
+		subtitle: {
+			text: 'Source: Twitter Inc'
+		},
+
+		xAxis: {
+			tickInterval: 7 * 24 * 3600 * 1000, // one week
+			tickWidth: 0,
+			gridLineWidth: 1,
+			labels: {
+				align: 'left',
+				x: 3,
+				y: -3
+			}
+		},
+
+		yAxis: [{ // left y axis
+			title: {
+				text: null
+			},
+			labels: {
+				align: 'left',
+				x: 3,
+				y: 16,
+				format: '{value:.,0f}'
+			},
+			showFirstLabel: false
+		}, { // right y axis
+			linkedTo: 0,
+			gridLineWidth: 0,
+			opposite: true,
+			title: {
+				text: null
+			},
+			labels: {
+				align: 'right',
+				x: -3,
+				y: 16,
+				format: '{value:.,0f}'
+			},
+			showFirstLabel: false
+		}],
+
+		legend: {
+			align: 'left',
+			verticalAlign: 'top',
+			borderWidth: 0
+		},
+
+		tooltip: {
+			shared: true,
+			crosshairs: true
+		},
+
+		plotOptions: {
+			series: {
+				cursor: 'pointer',
+				point: {
+					events: {
+						click: function (e) {
+							hs.htmlExpand(null, {
+								pageOrigin: {
+									x: e.pageX || e.clientX,
+									y: e.pageY || e.clientY
+								},
+								headingText: this.series.name,
+								maincontentText: Highcharts.dateFormat('%A, %b %e, %Y', this.x) + ':<br/> ' +
+									this.y + ' sessions',
+								width: 200
+							});
+						}
+					}
+				},
+				marker: {
+					lineWidth: 1
+				}
+			}
+		},
+
+		series: [{
+			name: 'All sessions',
+			lineWidth: 4,
+			marker: {
+				radius: 4
+			}
+		}, {
+			name: 'New users'
+		}]
+	});
+
+    var ret = [];
+    var keywords = ["North Korea"];
+
+    var chart_update = function () {
+        if (keywords.length == 1) {
+            keyword = keywords[0]
+            ret = [];
+        } else if (keywords.length > 1) {
+            keyword = keywords[keywords.length - 1]
+        }
+
+        $.getJSON('http://localhost:5000/fetch?k='+keyword, function (data) {
+            data = JSON.parse(data.data)
+            for (i in data) {
+                ret.push([keyword, data[i].keyword, data[i].val])
+            }
+
+            sankey.series[0].setData(ret);
+        });
+	};
+
+    var click_sankey_keyword = function (event) {
+        if (event.srcElement.innerHTML == "")
+            return;
+
+        _kw = event.srcElement.innerHTML;
+        keywords.push(_kw);
+        chart_update();
+    };
+
+	var sankey = Highcharts.chart('sankey', {
+
+			title: {
+				text: 'Highcharts Sankey Diagram'
+			},
+			series: [{
+				keys: ['from', 'to', 'weight'],
+				data: [],
+				type: 'sankey',
+				name: 'Sankey demo series'
+			}],
+
+            plotOptions: {
+                series: {
+                    cursor: 'pointer',
+                    events: {
+                        click: click_sankey_keyword,
+                    }
+                }
+            },
+		});
+
+    chart_update();
+    setInterval(function(){
+        chart_update();
+    }, 3000);
+
+	$.getJSON('https://cdn.jsdelivr.net/gh/highcharts/highcharts@v7.0.0/samples/data/world-population.json', function (data) {
+
+        Highcharts.mapChart('container3', {
+            chart: {
+                borderWidth: 1,
+                map: 'custom/world'
+            },
+
+            title: {
+                text: 'World population 2013 by country'
+            },
+
+            subtitle: {
+                text: 'Demo of Highcharts map with bubbles'
+            },
+
+            legend: {
+                enabled: false
+            },
+
+            mapNavigation: {
+                enabled: true,
+                buttonOptions: {
+                    verticalAlign: 'bottom'
+                }
+            },
+
+            series: [{
+                name: 'Countries',
+                color: '#E0E0E0',
+                enableMouseTracking: false
+            }, {
+                type: 'mapbubble',
+                name: 'Population 2016',
+                joinBy: ['iso-a3', 'code3'],
+                data: data,
+                minSize: 4,
+                maxSize: '12%',
+                tooltip: {
+                    pointFormat: '{point.properties.hc-a2}: {point.z} thousands'
+                }
+            }]
+        });
+    });
+
+</script>

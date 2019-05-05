@@ -2,7 +2,7 @@
 # Imports
 #----------------------------------------------------------------------------#
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import logging
 from logging import Formatter, FileHandler
 import json
@@ -30,7 +30,7 @@ redis_cli = redis.Redis(host='localhost', port=6379, db=0)
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('main.html')
 
 @app.route('/test', methods=['GET', 'POST'])
 def test_method():
@@ -80,7 +80,7 @@ def get_stats_with_keyword():
     # fetch stats data from mongod
     db = mongo_cli.usa_db
     coll = db.usa_tweets_nlp
-    dat = coll.find({"search_word": keyword}, {"keyword":1, "val":1, "_id":0}).sort('val', -1).limit(30)
+    dat = coll.find({"search_word": keyword}, {"keyword":1, "val":1, "_id":0}).sort('val', -1).limit(10)
 
     # resp
     ret = {
@@ -88,8 +88,10 @@ def get_stats_with_keyword():
         "message": "Statistic datum from {}".format(keyword),
         "data": dumps(dat)
     }
+    resp = jsonify(ret)
+    resp.headers.add('Access-Control-Allow-Origin', '*')
 
-    return json.dumps(ret), 200
+    return resp, 200
 
 #----------------------------------------------------------------------------#
 # Launch.
