@@ -21,7 +21,7 @@ app.config.from_object('config')
 MONGO_HOST = 'mongodb://admin:1234@ec2-13-125-208-40.ap-northeast-2.compute.amazonaws.com'
 
 mongo_cli = MongoClient(MONGO_HOST)
-redis_cli = redis.Redis(host='localhost', port=6379, db=0)
+redis_cli = redis.Redis(host='ec2-13-125-208-40.ap-northeast-2.compute.amazonaws.com', port=6379, db=0)
 
 #----------------------------------------------------------------------------#
 # Controllers.
@@ -76,6 +76,7 @@ def get_stats_with_keyword():
     redis_cli.set(keyword, keyword)
     redis_cli.expire(keyword, 40)
     redis_cli.sadd("keys", keyword)
+    redis_cli.sadd("search", keyword)
 
     # fetch stats data from mongod
     db = mongo_cli.usa_db
@@ -99,7 +100,7 @@ def get_stats_with_keyword():
 
 # Default port:
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', port=5000)
 
 # Or specify port manually:
 '''
