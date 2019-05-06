@@ -5,7 +5,7 @@ import time
 import string
 import re
 
-MONGO_HOST = 'mongodb://admin:1234@ec2-13-125-208-40.ap-northeast-2.compute.amazonaws.com'
+MONGO_HOST = 'mongodb://admin:1234@ec2-52-78-95-18.ap-northeast-2.compute.amazonaws.com'
 client = MongoClient(MONGO_HOST)
 db = client.usa_db
 source_collection = db.usa_tweets_collection
@@ -16,9 +16,9 @@ cnt=0
 tag_list = ["NNP", "NN"]
 removal=['ADV','PRON','CCONJ','PUNCT','PART','DET','ADP','SPACE']
 
-
-start_time = time.time()
 while(True):
+    start_time = time.time()
+    
     docs = source_collection.find({"nlp_flag": 0}).limit(100)
 
     print ("start processing 100 items")

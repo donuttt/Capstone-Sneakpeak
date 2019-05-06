@@ -50,7 +50,7 @@ def search_tweets_with(mongo_cli, api, keyword):
 
 
 if __name__ == '__main__':
-	MONGO_HOST = 'mongodb://admin:1234@ec2-13-125-208-40.ap-northeast-2.compute.amazonaws.com'
+	MONGO_HOST = 'mongodb://admin:1234@ec2-52-78-95-18.ap-northeast-2.compute.amazonaws.com'
 
 	consumer_key = twitter_credentials2.CONSUMER_KEY
 	consumer_secret = twitter_credentials2.CONSUMER_SECRET
