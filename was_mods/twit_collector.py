@@ -41,7 +41,7 @@ class StreamListener(tweepy.StreamListener):
 
             self.cnt = self.cnt + 1
 
-            print("{1} processed.".format(self.cnt))
+            print("{0} processed.".format(self.cnt))
 
         except Exception as e:
             print(e)

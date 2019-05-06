@@ -72,11 +72,12 @@ def get_stats_with_keyword():
         }
         return json.dumps(ret), 200
 
-    # retain keyword expire time
-    redis_cli.set(keyword, keyword)
-    redis_cli.expire(keyword, 40)
-    redis_cli.sadd("keys", keyword)
-    redis_cli.sadd("search", keyword)
+    if keyword not in ["Korean", "North Korea", "South Kroea"]:
+        # retain keyword expire time
+        redis_cli.set(keyword, keyword)
+        redis_cli.expire(keyword, 40)
+        redis_cli.sadd("keys", keyword)
+        redis_cli.sadd("search", keyword)
 
     # fetch stats data from mongod
     db = mongo_cli.usa_db
