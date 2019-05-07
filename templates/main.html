@@ -28,7 +28,7 @@
 #sankey {
     min-width: 300px;
     max-width: 800px;
-    height: 400px;
+    height: 500px;
     margin: 1em auto;
     border: 1px solid silver;
 }
@@ -167,6 +167,7 @@
 
     var ret = [];
     var keywords = ["North Korea"];
+	var depths_of_keyw = [["North Korea"]];
 
     var chart_update = function () {
         if (keywords.length == 1) {
@@ -175,10 +176,25 @@
         } else if (keywords.length > 1) {
             keyword = keywords[keywords.length - 1]
         }
+		var depth = 0;
+        for (var i in depths_of_keyw) {
+            if (depths_of_keyw[i].find(function(keyword){
+                depth = parseInt(i);
+                return true
+			})) {
+				break
+			};
+		}
+		depth = depth + 1;
 
         $.getJSON('http://localhost:5000/fetch?k='+keyword, function (data) {
             data = JSON.parse(data.data)
+			console.log(depth)
             for (i in data) {
+                if (depths_of_keyw[depth] == undefined)
+                    depths_of_keyw[depth] = [];
+                depths_of_keyw[depth].push(data[i].keyword)
+
                 ret.push([keyword, data[i].keyword, data[i].val])
             }
 
@@ -191,6 +207,17 @@
             return;
 
         _kw = event.srcElement.innerHTML;
+        var depth = -1;
+        for (var i in depths_of_keyw) {
+            if (depths_of_keyw[i].find(function(keyword){
+                depth = parseInt(i);
+                return true
+			})) {
+				break
+			};
+		}
+		depth = depth + 1;
+
         keywords.push(_kw);
         chart_update();
     };
