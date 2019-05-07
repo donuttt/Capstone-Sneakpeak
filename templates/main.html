@@ -199,7 +199,7 @@
 
 		for (key_idx in ll_keys) {
 		    console.log(ll_keys[key_idx])
-            $.getJSON('http://ec2-13-124-84-154.ap-northeast-2.compute.amazonaws.com:5000/fetch?k=' + ll_keys[key_idx], function (data) {
+            $.getJSON('http://ec2-13-124-84-154.ap-northeast-2.compute.amazonaws.com:30303/fetch?k=' + ll_keys[key_idx], function (data) {
                 _keyw = data.keyword
 				data = JSON.parse(data.data);
                 console.log(data)
