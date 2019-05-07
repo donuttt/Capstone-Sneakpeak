@@ -166,7 +166,7 @@
 	});
 
     var ret = [];
-    var keywords = ["North Korea"];
+    var keywords = [["North Korea", "South Korea", "Samsung"]];
 	var depths_of_keyw = [["North Korea"]];
 
 	var fetch_sankey_data_from = function (src) {
@@ -182,12 +182,8 @@
 	};
 
     var chart_update = function () {
-        if (keywords.length == 1) {
-            keyword = keywords[0]
-            ret = [];
-        } else if (keywords.length > 1) {
-            keyword = keywords[keywords.length - 1]
-        }
+        ll_keys = keywords[keywords.length-1];
+
 		var depth = 0;
         for (var i in depths_of_keyw) {
             if (depths_of_keyw[i].find(function(keyword){
@@ -200,29 +196,34 @@
 		depth = depth + 1;
 		if (ret[0] == undefined)
 		    ret.push({});
-		resp_data = []
 
-        $.getJSON('http://localhost:5000/fetch?k='+keyword, function (data) {
-            data = JSON.parse(data.data);
-			src_total_val = 0;
-            for (i in data) {
-                if (depths_of_keyw[depth] == undefined)
-                    depths_of_keyw[depth] = [];
-                depths_of_keyw[depth].push(data[i].keyword)
+		for (key_idx in ll_keys) {
+		    console.log(ll_keys[key_idx])
+            $.getJSON('http://localhost:5000/fetch?k=' + ll_keys[key_idx], function (data) {
+                _keyw = data.keyword
+				data = JSON.parse(data.data);
+                console.log(data)
 
-				src_total_val += data[i].val;
-				resp_data.push([data[i].keyword, data[i].val]);
-                // ret.push([keyword, data[i].keyword, data[i].val])
-            }
+				resp_data = []
+                src_total_val = 0;
+                for (i in data) {
+                    if (depths_of_keyw[depth] == undefined)
+                        depths_of_keyw[depth] = [];
+                    depths_of_keyw[depth].push(data[i].keyword)
 
-            for (var i in resp_data) {
-                resp_data[i][1] = resp_data[i][1]/src_total_val
-			}
+                    src_total_val += data[i].val;
+                    resp_data.push([data[i].keyword, data[i].val]);
+                    // ret.push([keyword, data[i].keyword, data[i].val])
+                }
 
-			ret[depth-1][keyword] = resp_data;
+                for (var i in resp_data) {
+                    resp_data[i][1] = resp_data[i][1] / src_total_val
+                }
+                ret[depth - 1][_keyw] = resp_data;
 
-            sankey.series[0].setData(fetch_sankey_data_from(ret));
-        });
+                sankey.series[0].setData(fetch_sankey_data_from(ret));
+            });
+        }
 	};
 
     var click_sankey_keyword = function (event) {
@@ -238,10 +239,15 @@
 			})) {
 				break
 			};
-		}
-		depth = depth + 1;
+        }
 
-        keywords.push(_kw);
+		if(depth == -1)
+		    return;
+
+		if (keywords[depth] == undefined)
+		    keywords[depth] = []
+
+		keywords[depth].push(_kw);
         chart_update();
     };
 
