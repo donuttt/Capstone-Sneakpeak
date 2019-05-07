@@ -30,7 +30,7 @@ def fetch_keyw_from(redis_cli):
 def search_tweets_with(mongo_cli, api, keyword):
 	# Find 'new' tweets (under hashtags/search terms)
 	# TODO: pages
-	tws = tweepy.Cursor(api.search, q=keyword, result_type="recent", lang="en", tweet_mode='extended').items(100)
+	tws = tweepy.Cursor(api.search, q=keyword+ " -filter:retweets", result_type="mixed", lang="en", tweet_mode='extended').items(100)
 	print("Searching under term..." + keyword)
 
 	tw_mn = Tweetmanager(mongo_cli, keyword, 's')
@@ -42,8 +42,8 @@ def search_tweets_with(mongo_cli, api, keyword):
 			if ret == None:
 				print("Not handled: {0}".format(reason))
 
-		processed_cnt = processed_cnt + 1
-		print ("{} processed.".format(processed_cnt))
+			processed_cnt = processed_cnt + 1
+			print ("{} processed.".format(processed_cnt))
 
 	except tweepy.error.TweepError as e:
 		print str(e)
