@@ -169,6 +169,18 @@
     var keywords = ["North Korea"];
 	var depths_of_keyw = [["North Korea"]];
 
+	var fetch_sankey_data_from = function (src) {
+	    _ret = []
+	    for (var i in src) {
+	        for (var keyword in src[i]) {
+	            for (var idx in src[i][keyword]) {
+                    _ret.push([keyword, src[i][keyword][idx][0], src[i][keyword][idx][1]]);
+                }
+			}
+		}
+		return _ret
+	};
+
     var chart_update = function () {
         if (keywords.length == 1) {
             keyword = keywords[0]
@@ -186,19 +198,30 @@
 			};
 		}
 		depth = depth + 1;
+		if (ret[0] == undefined)
+		    ret.push({});
+		resp_data = []
 
         $.getJSON('http://localhost:5000/fetch?k='+keyword, function (data) {
-            data = JSON.parse(data.data)
-			console.log(depth)
+            data = JSON.parse(data.data);
+			src_total_val = 0;
             for (i in data) {
                 if (depths_of_keyw[depth] == undefined)
                     depths_of_keyw[depth] = [];
                 depths_of_keyw[depth].push(data[i].keyword)
 
-                ret.push([keyword, data[i].keyword, data[i].val])
+				src_total_val += data[i].val;
+				resp_data.push([data[i].keyword, data[i].val]);
+                // ret.push([keyword, data[i].keyword, data[i].val])
             }
 
-            sankey.series[0].setData(ret);
+            for (var i in resp_data) {
+                resp_data[i][1] = resp_data[i][1]/src_total_val
+			}
+
+			ret[depth-1][keyword] = resp_data;
+
+            sankey.series[0].setData(fetch_sankey_data_from(ret));
         });
 	};
 

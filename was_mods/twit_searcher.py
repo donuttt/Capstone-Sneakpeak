@@ -17,10 +17,10 @@ def fetch_keyw_from(redis_cli):
 
 	for keyword in ll:
 		redis_cli.srem(member_key, keyword)
-		_k = redis_cli.get(keyword)
+		_k = redis_cli.get(member_key + "_" + keyword)
 
 		if _k == None:
-			redis_cli.set(keyword, 1)
+			redis_cli.set(member_key + "_" + keyword, 1)
 			ret = keyword
 			break
 
@@ -58,7 +58,7 @@ if __name__ == '__main__':
 	access_token_secret = twitter_credentials2.ACCESS_TOKEN_SECRET
 
 	client = MongoClient(MONGO_HOST)
-	redis_cli = redis.Redis(host='localhost', port=6379, db=0)
+	redis_cli = redis.Redis(host='ec2-13-124-84-154.ap-northeast-2.compute.amazonaws.com', port=6379, db=0)
 
 	auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 	auth.set_access_token(access_token, access_token_secret)
