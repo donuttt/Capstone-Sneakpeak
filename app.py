@@ -72,7 +72,7 @@ def get_stats_with_keyword():
         }
         return json.dumps(ret), 200
 
-    if keyword not in ["Korean", "North Korea", "South Kroea"]:
+    if keyword not in ["Samsung", "North Korea", "South Kroea"]:
         # retain keyword expire time
         redis_cli.set(keyword, keyword)
         redis_cli.expire(keyword, 40)
@@ -88,6 +88,7 @@ def get_stats_with_keyword():
     ret = {
         "code": 1000,
         "message": "Statistic datum from {}".format(keyword),
+        "keyword": keyword,
         "data": dumps(dat)
     }
     resp = jsonify(ret)
