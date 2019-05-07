@@ -18,7 +18,7 @@ class Tweetmanager():
 
 		mention = reform_src["mention"]
 
-		if 'is_quote_status' in source and source['quoted_status']:
+		if 'is_quote_status' in source and 'quoted_status' in source:
 			reform_src["quote"] = self._do_reformat_tweets(source["quoted_status"])
 			mention = reform_src["quote"]["mention"]
 
