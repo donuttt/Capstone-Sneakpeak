@@ -184,7 +184,7 @@
 		    ret.push({});
 
 		$.ajax({
-		  url: 'http://ec2-54-180-103-164.ap-northeast-2.compute.amazonaws.com/fetch/list',
+		  url: 'http://ec2-54-180-103-164.ap-northeast-2.compute.amazonaws.com:30303/fetch/list',
 		  type: "POST",
 		  data: JSON.stringify({'keywords': _keywords }),
 		  contentType:"application/json; charset=utf-8",
