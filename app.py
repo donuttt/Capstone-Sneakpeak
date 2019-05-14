@@ -60,6 +60,50 @@ if not app.debug:
     app.logger.addHandler(file_handler)
     app.logger.info('errors')
 
+@app.route('/fetch/list', methods=['POST'])
+def get_stats_with_keywords():
+    data = json.loads(request.data)
+    keywords = data['keywords']
+    if type(keywords) != list or len(keywords) == 0:
+        ret = {
+            "code": -1000,
+            "message": "Please serve keyword with your request!!",
+            "data": {}
+        }
+        return json.dumps(ret), 200
+
+    ret_dat = []
+    denoms_per_dat = {}
+
+    for keyword in keywords:
+        if keyword not in ["Samsung", "North Korea", "South Korea", "Apple"]:
+            # retain keyword expire time
+            redis_cli.set(keyword, keyword)
+            redis_cli.expire(keyword, 40)
+            redis_cli.sadd("keys", keyword)
+            redis_cli.sadd("search", keyword)
+
+        # fetch stats data from mongod
+        db = mongo_cli.usa_db
+        coll = db.usa_tweets_nlp
+        dat = list(coll.find({"search_word": keyword}, {"search_word": 1, "keyword": 1, "val": 1, "_id": 0}).sort('val', -1).limit(6))
+        denoms_per_dat[keyword] = 0
+        for i in dat:
+            denoms_per_dat[keyword] = denoms_per_dat[keyword] + i['val']
+        ret_dat += dat
+
+    # resp
+    ret = {
+        "code": 1000,
+        "message": "Statistic datum from {}".format(keyword),
+        "denoms": dumps(denoms_per_dat),
+        "data": dumps(ret_dat),
+    }
+    resp = jsonify(ret)
+    resp.headers.add('Access-Control-Allow-Origin', '*')
+
+    return resp, 200
+
 
 @app.route('/fetch', methods=['GET'])
 def get_stats_with_keyword():
