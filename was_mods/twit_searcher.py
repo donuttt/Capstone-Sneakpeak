@@ -50,7 +50,7 @@ def search_tweets_with(mongo_cli, api, keyword):
 
 
 if __name__ == '__main__':
-	MONGO_HOST = 'mongodb://admin:1234@ec2-13-124-84-154.ap-northeast-2.compute.amazonaws.com'
+	MONGO_HOST = 'mongodb://admin:1234@ec2-54-180-103-164.ap-northeast-2.compute.amazonaws.com'
 
 	consumer_key = twitter_credentials2.CONSUMER_KEY
 	consumer_secret = twitter_credentials2.CONSUMER_SECRET
@@ -58,7 +58,7 @@ if __name__ == '__main__':
 	access_token_secret = twitter_credentials2.ACCESS_TOKEN_SECRET
 
 	client = MongoClient(MONGO_HOST)
-	redis_cli = redis.Redis(host='ec2-13-124-84-154.ap-northeast-2.compute.amazonaws.com', port=6379, db=0)
+	redis_cli = redis.Redis(host='ec2-54-180-103-164.ap-northeast-2.compute.amazonaws.com', port=6379, db=0)
 
 	auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 	auth.set_access_token(access_token, access_token_secret)
