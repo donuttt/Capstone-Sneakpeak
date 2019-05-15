@@ -5,7 +5,7 @@ import time
 import string
 import re
 
-MONGO_HOST = 'mongodb://admin:1234@ec2-54-180-103-164.ap-northeast-2.compute.amazonaws.com'
+MONGO_HOST = 'mongodb://admin:1234@ec2-54-180-32-117.ap-northeast-2.compute.amazonaws.com'
 client = MongoClient(MONGO_HOST)
 db = client.usa_db
 source_collection = db.usa_tweets_collection

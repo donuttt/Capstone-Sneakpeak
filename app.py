@@ -18,10 +18,10 @@ import os
 app = Flask(__name__)
 app.config.from_object('config')
 
-MONGO_HOST = 'mongodb://admin:1234@ec2-54-180-103-164.ap-northeast-2.compute.amazonaws.com'
+MONGO_HOST = 'mongodb://admin:1234@ec2-54-180-32-117.ap-northeast-2.compute.amazonaws.com'
 
 mongo_cli = MongoClient(MONGO_HOST)
-redis_cli = redis.Redis(host='ec2-54-180-103-164.ap-northeast-2.compute.amazonaws.com', port=6379, db=0)
+redis_cli = redis.Redis(host='ec2-54-180-32-117.ap-northeast-2.compute.amazonaws.com', port=6379, db=0)
 
 #----------------------------------------------------------------------------#
 # Controllers.
