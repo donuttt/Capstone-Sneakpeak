@@ -7,7 +7,7 @@ import time
 import re
 nltk.downloader.download('vader_lexicon')
 
-MONGO_HOST = 'mongodb://admin:1234@54.180.145.113'
+MONGO_HOST = 'mongodb://admin:1234@localhost/usa_db'
 client = MongoClient(MONGO_HOST)
 db = client.usa_db
 src_coll = db.usa_tweets_collection
