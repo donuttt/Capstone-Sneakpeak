@@ -2,9 +2,9 @@
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://code.highcharts.com/modules/data.js"></script>
 <script src="https://code.highcharts.com/modules/series-label.js"></script>
-<script src="https://code.highcharts.com/modules/sankey.js"></script>
 <script src="https://code.highcharts.com/modules/exporting.js"></script>
 <script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/networkgraph.js"></script>
 
 <!-- Additional files for the Highslide popup effect -->
 <script src="https://www.highcharts.com/media/com_demo/js/highslide-full.min.js"></script>
@@ -25,12 +25,10 @@
 <script src="https://code.highcharts.com/modules/wordcloud.js"></script>
 
 <style>
-#sankey {
-    min-width: 300px;
-    max-width: 1200px;
-    height: 800px;
-    margin: 1em auto;
-    border: 1px solid silver;
+#asso_net {
+    min-width: 320px;
+	max-width: 1200px;
+	margin: 0 auto;
 }
 
 </style>
@@ -38,11 +36,15 @@
 <div class="containerr">
 	<div class="row">
 		<div class="col-sm-6 col-md-6">
-			<div id="container1"></div>
+			<div id="container1" style="text-align:center;margin-bottom: 30px;">
+				<h style="color:#333333;font-size:18px;fill:#333333;">Twitter Sentiment Analysis</h>
+				<br>
+				<text x="1272" text-anchor="middle" class="highcharts-subtitle" data-z-index="4" style="color:#666666;fill:#666666;" y="46"><tspan>Source: Twitter Inc</tspan></text>
+			</div>
 		</div>
 		<div class="col-sm-6 col-md-6">
 			<div id="container2">
-                <div id="sankey"></div>
+                <div id="asso_net"></div>
             </div>
 		</div>
 		<div class="col-sm-6 col-md-6">
@@ -57,133 +59,117 @@
 
 <script type="text/javascript">
 
-	Highcharts.chart('container1', {
-
-		chart: {
-			scrollablePlotArea: {
-				minWidth: 700
-			}
-		},
-
-		data: {
-			csvURL: 'https://cdn.jsdelivr.net/gh/highcharts/highcharts@v7.0.0/samples/data/analytics.csv',
-			beforeParse: function (csv) {
-				return csv.replace(/\n\n/g, '\n');
-			}
-		},
-
-		title: {
-			text: 'Twitter Sentiment Analysis'
-		},
-
-		subtitle: {
-			text: 'Source: Twitter Inc'
-		},
-
-		xAxis: {
-			tickInterval: 7 * 24 * 3600 * 1000, // one week
-			tickWidth: 0,
-			gridLineWidth: 1,
-			labels: {
-				align: 'left',
-				x: 3,
-				y: -3
-			}
-		},
-
-		yAxis: [{ // left y axis
-			title: {
-				text: null
-			},
-			labels: {
-				align: 'left',
-				x: 3,
-				y: 16,
-				format: '{value:.,0f}'
-			},
-			showFirstLabel: false
-		}, { // right y axis
-			linkedTo: 0,
-			gridLineWidth: 0,
-			opposite: true,
-			title: {
-				text: null
-			},
-			labels: {
-				align: 'right',
-				x: -3,
-				y: 16,
-				format: '{value:.,0f}'
-			},
-			showFirstLabel: false
-		}],
-
-		legend: {
-			align: 'left',
-			verticalAlign: 'top',
-			borderWidth: 0
-		},
-
-		tooltip: {
-			shared: true,
-			crosshairs: true
-		},
-
-		plotOptions: {
-			series: {
-				cursor: 'pointer',
-				point: {
-					events: {
-						click: function (e) {
-							hs.htmlExpand(null, {
-								pageOrigin: {
-									x: e.pageX || e.clientX,
-									y: e.pageY || e.clientY
-								},
-								headingText: this.series.name,
-								maincontentText: Highcharts.dateFormat('%A, %b %e, %Y', this.x) + ':<br/> ' +
-									this.y + ' sessions',
-								width: 200
-							});
-						}
-					}
-				},
-				marker: {
-					lineWidth: 1
-				}
-			}
-		},
-
-		series: [{
-			name: 'All sessions',
-			lineWidth: 4,
-			marker: {
-				radius: 4
-			}
-		}, {
-			name: 'New users'
-		}]
-	});
-
-    var ret = [];
-    var keywords = [["North Korea", "South Korea", "Samsung"]];
+	var ret = [];
+    var linear_type_resp = [];
+    var keywords = [["Apple", "Samsung"]];
 	var depths_of_keyw = [["North Korea"]];
+	var ban_keywords = ['amp', 'sex', 'day']
 
-	var fetch_sankey_data_from = function (src) {
+	var fetch_network_data_from = function (src) {
 	    _ret = []
 	    for (var i in src) {
 	        for (var keyword in src[i]) {
 	            for (var idx in src[i][keyword]) {
-                    _ret.push([keyword, src[i][keyword][idx][0], src[i][keyword][idx][1]]);
+	                if (!ban_keywords.includes(src[i][keyword][idx][0]))
+	                    _ret.push([keyword, src[i][keyword][idx][0]]);//, src[i][keyword][idx][1]]);
                 }
 			}
 		}
 		return _ret
 	};
 
-    var chart_update = function () {
-        ll_keys = keywords[keywords.length-1];
+	var fetch_network_score_from = function (src) {
+	    _ret = {};
+	    for (var i in src) {
+	        for (var keyword in src[i]) {
+	            for (var idx in src[i][keyword]) {
+	                key = src[i][keyword][idx][0];
+	                val = src[i][keyword][idx][1];
 
+	                if (_ret[key] != undefined)
+	                    _ret[key] = _ret[key] + val;
+					else
+					    _ret[key] = val;
+                }
+			}
+		}
+
+		return _ret
+	};
+
+	var linear_keywords_array = function() {
+	    var _ret = [];
+	    keywords.forEach(function(_d) {
+	        _ret = _ret.concat(_d);
+	        // _d.forEach(function(s) {
+	        // 	_ret.push(s.toLowerCase());
+			// });
+		});
+	    return _ret;
+	};
+
+    var update_network = function(data) {
+        associative_net.series[0].options.nodes = [];
+        associative_net.series[0].layout.nodes.length = 0;
+		associative_net.series[0].layout.links.length = 0;
+
+	    associative_net.series[0].setData(data);
+
+	    var curr_keywords = linear_keywords_array();
+		var scores = fetch_network_score_from(ret);
+
+	    var colors = Highcharts.getOptions().colors,
+			i = 1;
+
+	    associative_net.series[0].nodes.forEach(function (node) {
+			if (curr_keywords.includes(node.id)) {
+			    node.marker = {
+			        radius: 30
+				};
+			    node.color = colors[i++]
+			} else {
+			    node.marker = {
+			        radius: 50 * scores[node.id] < 20 ? 50 * scores[node.id] : 20
+				};
+			}
+		});
+		associative_net.series[0].redraw();
+	    /*
+
+	    var colors = Highcharts.getOptions().colors,
+				i = 0,
+				nodes = {};
+			// e.options.data.forEach(function (link) {
+			// 	if (link[0] === 'Samsung') {
+			// 	    console.log("??????????")
+			// 		nodes['Proto Indo-European'] = {
+			// 			id: 'Proto Indo-European',
+			// 			marker: {
+			// 				radius: 20
+			// 			}
+			// 		};
+			// 		nodes[link[1]] = {
+			// 			id: link[1],
+			// 			marker: {
+			// 				radius: 10
+			// 			},
+			// 			color: colors[i++]
+			// 		};
+			// 	} else if (nodes[link[0]] && nodes[link[0]].color) {
+			// 		nodes[link[1]] = {
+			// 			id: link[1],
+			// 			color: nodes[link[0]].color
+			// 		};
+			// 	}
+			// });
+
+			e.options.nodes = Object.keys(nodes).map(function (id) {
+				return nodes[id];
+			});
+	     */
+    };
+
+    var chart_update = function (_keywords) {
 		var depth = 0;
         for (var i in depths_of_keyw) {
             if (depths_of_keyw[i].find(function(keyword){
@@ -197,36 +183,65 @@
 		if (ret[0] == undefined)
 		    ret.push({});
 
-		for (key_idx in ll_keys) {
-		    console.log(ll_keys[key_idx])
-            $.getJSON('http://ec2-13-124-84-154.ap-northeast-2.compute.amazonaws.com:30303/fetch?k=' + ll_keys[key_idx], function (data) {
-                _keyw = data.keyword
-				data = JSON.parse(data.data);
-                console.log(data)
+		$.ajax({
+		  url: 'http://54.180.145.113:30303/fetch/list',
+		  type: "POST",
+		  data: JSON.stringify({'keywords': _keywords }),
+		  contentType:"application/json; charset=utf-8",
+		  dataType:"json",
+		  success: function (data) {
+				_data = JSON.parse(data.data);
+				denoms = JSON.parse(data.denoms);
+				resp_data = [];
 
-				resp_data = []
-                src_total_val = 0;
-                for (i in data) {
-                    if (depths_of_keyw[depth] == undefined)
-                        depths_of_keyw[depth] = [];
-                    depths_of_keyw[depth].push(data[i].keyword)
+				_keywords.forEach(function(key) {
+					ret[depth-1][key] = [];
+				});
 
-                    src_total_val += data[i].val;
-                    resp_data.push([data[i].keyword, data[i].val]);
-                    // ret.push([keyword, data[i].keyword, data[i].val])
-                }
+				_data.forEach(function(_d) {
+				    if (ban_keywords.includes(_d.keyword))
+				        return;
 
-                for (var i in resp_data) {
-                    resp_data[i][1] = resp_data[i][1] / src_total_val
-                }
-                ret[depth - 1][_keyw] = resp_data;
+					if (depths_of_keyw[depth] == undefined)
+						depths_of_keyw[depth] = [];
+					depths_of_keyw[depth].push(_d.keyword)
 
-                sankey.series[0].setData(fetch_sankey_data_from(ret));
-            });
-        }
+					ret[depth-1][_d.search_word].push([_d.keyword, _d.val/denoms[_d.search_word]])
+				});
+
+			  update_network(fetch_network_data_from(ret))
+		  }
+		});
+
+		//
+		// for (key_idx in ll_keys) {
+        //     $.getJSON('http://localhost:30303/fetch?k=' + ll_keys[key_idx], function (data) {
+        //         _keyw = data.keyword
+		// 		data = JSON.parse(data.data);
+		//
+		// 		resp_data = []
+        //         src_total_val = 0;
+        //         for (i in data) {
+        //             if (depths_of_keyw[depth] == undefined)
+        //                 depths_of_keyw[depth] = [];
+        //             depths_of_keyw[depth].push(data[i].keyword)
+		//
+        //             src_total_val += data[i].val;
+        //             resp_data.push([data[i].keyword, data[i].val]);
+        //             // ret.push([keyword, data[i].keyword, data[i].val])
+        //         }
+		//
+        //         for (var i in resp_data) {
+        //             resp_data[i][1] = resp_data[i][1] / src_total_val
+        //         }
+        //         ret[depth - 1][_keyw] = resp_data;
+		//
+		// 		update_network(fetch_network_data_from(ret));
+        //     });
+        // }
 	};
 
-    var click_sankey_keyword = function (event) {
+    var click_network_keyword = function (event) {
         if (event.srcElement.innerHTML == "")
             return;
 
@@ -251,76 +266,62 @@
         chart_update();
     };
 
-	var sankey = Highcharts.chart('sankey', {
-
+	var associative_net = Highcharts.chart('asso_net', {
+			chart: {
+				type: 'networkgraph',
+				height: '50%'
+			},
 			title: {
-				text: 'Highcharts Sankey Diagram'
+				text: 'Word Cluster'
+			},
+			subtitle: {
+			  	text: "current searching: " + (keywords[keywords.length-1].join(", ")),
+				style: {"fontSize": "14px"}
+			},
+			plotOptions: {
+			    animation: {
+                    duration: 100,
+                },
+				networkgraph: {
+					keys: ['from', 'to'],
+					layoutAlgorithm: {
+						enableSimulation: true,
+						friction: -0.9
+					}
+				}
 			},
 			series: [{
-				keys: ['from', 'to', 'weight'],
-				data: [],
-				type: 'sankey',
-				name: 'Sankey demo series'
-			}],
-
-            plotOptions: {
-                series: {
-                    cursor: 'pointer',
-                    events: {
-                        click: click_sankey_keyword,
-                    }
-                }
-            },
+				dataLabels: {
+					enabled: true,
+					linkFormat: ''
+				},
+				data: []
+			}]
 		});
 
-    chart_update();
+    chart_update(keywords[keywords.length-1]);
+
     setInterval(function(){
-        chart_update();
-    }, 3000);
+        _scores = fetch_network_score_from(ret);
+        sortable_scores = []
+        for (var key in _scores)
+            sortable_scores.push([key, _scores[key]])
 
-	$.getJSON('https://cdn.jsdelivr.net/gh/highcharts/highcharts@v7.0.0/samples/data/world-population.json', function (data) {
+		sortable_scores.sort(function(a, b){
+		   return b[1] - a[1];
+		});
 
-        Highcharts.mapChart('container3', {
-            chart: {
-                borderWidth: 1,
-                map: 'custom/world'
-            },
+        _keywords = [];
+		_keywords.push(sortable_scores[0][0]);
+		_keywords.push(sortable_scores[1][0]);
+		_keywords.push(sortable_scores[2][0]);
 
-            title: {
-                text: 'World population 2013 by country'
-            },
+		associative_net.setTitle(null, {"text": "current expanding to: " + _keywords.join(", ")});
+		console.log(keywords[keywords.length-1].concat(_keywords))
 
-            subtitle: {
-                text: 'Demo of Highcharts map with bubbles'
-            },
+        chart_update(keywords[keywords.length-1].concat(_keywords));
+    }, 10000);
 
-            legend: {
-                enabled: false
-            },
 
-            mapNavigation: {
-                enabled: true,
-                buttonOptions: {
-                    verticalAlign: 'bottom'
-                }
-            },
-
-            series: [{
-                name: 'Countries',
-                color: '#E0E0E0',
-                enableMouseTracking: false
-            }, {
-                type: 'mapbubble',
-                name: 'Population 2016',
-                joinBy: ['iso-a3', 'code3'],
-                data: data,
-                minSize: 4,
-                maxSize: '12%',
-                tooltip: {
-                    pointFormat: '{point.properties.hc-a2}: {point.z} thousands'
-                }
-            }]
-        });
-    });
 
 </script>
