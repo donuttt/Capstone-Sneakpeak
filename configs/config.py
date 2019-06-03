@@ -13,10 +13,10 @@ class Config:
 class DevelopmentConfig(Config):
     DEBUG = True
 
-    MONGO_HOST = 'mongodb://admin:1234@54.180.145.113/usa_db'
+    MONGO_HOST = 'mongodb://admin:1234@54.180.122.32/usa_db'
 
     MONGO_CLI = MongoClient(MONGO_HOST)
-    REDIS_CLI = redis.Redis(host='54.180.145.113', port=6379, db=0)
+    REDIS_CLI = redis.Redis(host='54.180.122.32', port=6379, db=0)
 
 
 class ProductionConfig(Config):

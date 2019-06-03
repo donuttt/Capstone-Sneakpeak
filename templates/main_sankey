@@ -199,7 +199,7 @@
 
 		for (key_idx in ll_keys) {
 		    console.log(ll_keys[key_idx])
-            $.getJSON('http://54.180.145.113:30303/fetch?k=' + ll_keys[key_idx], function (data) {
+            $.getJSON('http://54.180.122.32:30303/fetch?k=' + ll_keys[key_idx], function (data) {
                 _keyw = data.keyword
 				data = JSON.parse(data.data);
                 console.log(data)

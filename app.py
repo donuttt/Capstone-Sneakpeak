@@ -60,6 +60,53 @@ if not app.debug:
     app.logger.addHandler(file_handler)
     app.logger.info('errors')
 
+@app.route('/sentiment/count', methods=['POST'])
+def post_sentiment_count_with_keywords():
+    data = json.loads(request.data)
+    keywords = data['keywords']
+
+    if type(keywords) != list or len(keywords) == 0:
+        ret = {
+            "code": -1000,
+            "message": "Please serve keyword with your request!!",
+            "data": {}
+        }
+        return json.dumps(ret), 200
+
+    tag_list = ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']
+
+    ret_dat = {}
+    for keyword in keywords:
+        db = mongo_cli.usa_db
+        # src total count
+        coll = db.usa_tweets_collection
+        total_cnt = coll.find({"search_word": {'$in': [keyword, keyword.lower()]}}).count()
+
+        # fetch stats data from mongod
+        coll = db.usa_tweets_sentiment_count_exp
+
+        ret_dat[keyword] = {'total_cnt': total_cnt}
+        for sentiment in ['pos', 'neg']:
+            dat = list(coll.find({"search_word": keyword, 'sentiment': sentiment, 'tag': {'$nin': tag_list}}).sort('val', -1).limit(10))
+            ret_dat[keyword][sentiment] = []
+            for d in dat:
+                ret_dat[keyword][sentiment].append({
+                    'keyword': d['keyword'],
+                    'val': d['val'],
+                })
+
+    # resp
+    ret = {
+        "code": 1000,
+        "message": "Statistic datum from {}".format(keyword),
+        "data": dumps(ret_dat),
+    }
+    resp = jsonify(ret)
+    resp.headers.add('Access-Control-Allow-Origin', '*')
+
+    return resp, 200
+
+
 @app.route('/sentiment/ts', methods=['POST'])
 def post_sentiment_ts_with_keywords():
     data = json.loads(request.data)
@@ -82,12 +129,12 @@ def post_sentiment_ts_with_keywords():
 
         # fetch stats data from mongod
         db = mongo_cli.usa_db
-        coll = db.usa_tweets_sentiment_ts
+        coll = db.usa_tweets_sentiment_ts_exp
         dat = list(coll.find({"keyword": keyword.lower(), "ts_hundredsec": {'$gt': ts_idx}}).sort('ts_hundredsec', -1).limit(10))
         ret_dat[keyword] = []
         for d in dat:
             ret_dat[keyword].insert(0, {
-                'val': d['pos']/d['total'] - d['neg']/d['total'],
+                'val': d['compound']/d['total'],
                 'ts': d['ts_hundredsec'],
             })
 
@@ -130,7 +177,7 @@ def get_stats_with_keywords():
 
         # fetch stats data from mongod
         db = mongo_cli.usa_db
-        coll = db.usa_tweets_named
+        coll = db.usa_tweets_named_exp
         dat = list(coll.find({"search_word": keyword}, {"search_word": 1, "keyword": 1, "val": 1, "_id": 0}).sort('val', -1).limit(6))
         denoms_per_dat[keyword] = 0
         for i in dat:
