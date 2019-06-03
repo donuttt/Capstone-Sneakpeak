@@ -35,7 +35,6 @@ while(True):
                         {'neu': neu_score, 'pos': pos_score, 'neg': neg_score}
                     }
 
-
         # best_score = max(pos_score, neg_score, neu_score)
         # if neu_score == best_score:
         #     update_q = {'$inc': {'neu': 1}}

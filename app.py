@@ -10,23 +10,23 @@ from pymongo import MongoClient
 import redis
 from bson.json_util import dumps
 import os
+from configs.config import config_via_env
 
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
 
 app = Flask(__name__)
-app.config.from_object('config')
+env = 'dev' if os.getenv('CAPSTONE_DEV_ENV') else 'prod'
 
-MONGO_HOST = 'mongodb://admin:1234@127.0.0.1/usa_db'
+app.config.from_object(config_via_env[env])
 
-mongo_cli = MongoClient(MONGO_HOST)
-redis_cli = redis.Redis(host='127.0.0.1', port=6379, db=0)
+mongo_cli = app.config['MONGO_CLI']
+redis_cli = app.config['REDIS_CLI']
 
 #----------------------------------------------------------------------------#
 # Controllers.
 #----------------------------------------------------------------------------#
-
 
 @app.route('/')
 def home():
@@ -76,7 +76,9 @@ def get_stats_with_keywords():
     denoms_per_dat = {}
 
     for keyword in keywords:
-        if keyword not in ["Samsung", "North Korea", "South Korea", "Apple"]:
+        keyword = keyword.lower()
+        print keyword
+        if keyword not in ["samsung", "north korea", "south korea", "apple"]:
             # retain keyword expire time
             redis_cli.set(keyword, keyword)
             redis_cli.expire(keyword, 40)
@@ -85,7 +87,7 @@ def get_stats_with_keywords():
 
         # fetch stats data from mongod
         db = mongo_cli.usa_db
-        coll = db.usa_tweets_nlp
+        coll = db.usa_tweets_named
         dat = list(coll.find({"search_word": keyword}, {"search_word": 1, "keyword": 1, "val": 1, "_id": 0}).sort('val', -1).limit(6))
         denoms_per_dat[keyword] = 0
         for i in dat:
@@ -147,10 +149,3 @@ def get_stats_with_keyword():
 # Default port:
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=30303)
-
-# Or specify port manually:
-'''
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
-'''

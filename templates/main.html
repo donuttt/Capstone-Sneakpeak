@@ -42,10 +42,15 @@
 				<text x="1272" text-anchor="middle" class="highcharts-subtitle" data-z-index="4" style="color:#666666;fill:#666666;" y="46"><tspan>Source: Twitter Inc</tspan></text>
 			</div>
 		</div>
-		<div class="col-sm-6 col-md-6">
-			<div id="container2">
+		<div class="col-sm-6 col-md-6" style="height: 600px">
+			<div id="container2" style='display:inline;float:left;width:1200px'>
                 <div id="asso_net"></div>
             </div>
+
+			<div style='display:inline;float:left;width:1000px'>
+
+			</div>
+
 		</div>
 		<div class="col-sm-6 col-md-6">
 			<div id="container3"></div>
@@ -62,8 +67,9 @@
 	var ret = [];
     var linear_type_resp = [];
     var keywords = [["Apple", "Samsung"]];
+    var keywords_lower = [["apple", "samsung"]];
 	var depths_of_keyw = [["North Korea"]];
-	var ban_keywords = ['amp', 'sex', 'day']
+	var ban_keywords = ['amp', 'sex', 'day', 'today', 'time']
 
 	var fetch_network_data_from = function (src) {
 	    _ret = []
@@ -133,7 +139,25 @@
 				};
 			}
 		});
+	    associative_net.series[0].options.animation.duration = 10;
 		associative_net.series[0].redraw();
+
+		//
+		// plotOptions: {
+		// 	    animation: {
+        //             duration: 100,
+        //         },
+		// 		networkgraph: {
+		// 			keys: ['from', 'to'],
+		// 			layoutAlgorithm: {
+		// 				enableSimulation: false,
+		// 				friction: -0.9
+		// 			}
+		// 		}
+		// 	},
+		//
+		//
+		//
 	    /*
 
 	    var colors = Highcharts.getOptions().colors,
@@ -183,8 +207,12 @@
 		if (ret[0] == undefined)
 		    ret.push({});
 
+		for (i in _keywords) {
+            _keywords[i] = _keywords[i].toLowerCase()
+        }
+
 		$.ajax({
-		  url: 'http://54.180.145.113:30303/fetch/list',
+		  url: 'http://localhost:30303/fetch/list',
 		  type: "POST",
 		  data: JSON.stringify({'keywords': _keywords }),
 		  contentType:"application/json; charset=utf-8",
@@ -290,6 +318,7 @@
 					}
 				}
 			},
+			exporting: { enabled: false },
 			series: [{
 				dataLabels: {
 					enabled: true,
