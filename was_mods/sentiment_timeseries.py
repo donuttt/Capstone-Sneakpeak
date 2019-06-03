@@ -21,13 +21,13 @@ sid = SentimentIntensityAnalyzer()
 while(True):
     start_time = time.time()
 
-    docs = src_coll.find({"nlp_flag": 2}).limit(1000)
+    docs = src_coll.find({"nlp_flag": 3}).limit(1000)
 
     print ("start processing 1000 items")
 
     for doc in docs:
         print ("processing... {}".format(doc['search_word']))
-        db.usa_tweets_collection.update_one({'_id': doc['_id']}, {'$set': {'nlp_flag': 3}})
+        # db.usa_tweets_collection.update_one({'_id': doc['_id']}, {'$set': {'nlp_flag': 3}})
 
 
         if doc['timestamp_ms'] == "-1":
@@ -39,8 +39,9 @@ while(True):
         neu_score = ss['neu']
         neg_score = ss['neg']
         pos_score = ss['pos']
+        compound_score = ss['compound']
         update_q = {'$inc':
-                        {'neu': neu_score, 'pos': pos_score, 'neg': neg_score, 'total':1}
+                        {'compound': compound_score, 'neu': neu_score, 'pos': pos_score, 'neg': neg_score, 'total':1}
                     }
 
         target_coll.find_and_modify(
