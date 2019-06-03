@@ -10,7 +10,7 @@ from pymongo import MongoClient
 import time
 import re
 
-MONGO_HOST = 'mongodb://admin:1234@13.209.21.102'
+MONGO_HOST = 'mongodb://admin:1234@54.180.122.32'
 client = MongoClient(MONGO_HOST)
 db = client.usa_db
 source_collection = db.usa_tweets_collection
