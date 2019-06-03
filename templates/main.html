@@ -47,17 +47,30 @@
                 <div id="asso_net"></div>
             </div>
 
-			<div style='display:inline;float:left;width:1000px'>
+			<div id="container2-2" style='display:inline;float:left;width:1000px;height:600px'>
+				<div id="container2-2-1" style="height:300px">
+					<p id="title2-2-1" style="margin-top:0px;text-align: center;font-size: 18px;font-weight: bold;">test</p>
+					<div id="container2-2-1-1" style='display:inline;float:left;width:300px;height:250px'>
+					</div>
+					<div id="container2-2-1-2" style='display:inline;float:left;width:300px;height:250px'>
+					</div>
+					<div id="container2-2-1-3" style='display:inline;float:left;width:300px;height:250px'>
+					</div>
+				</div>
+				<div id="container2-2-2">
+				</div>
 
 			</div>
 
 		</div>
 		<div class="col-sm-6 col-md-6">
-			<div id="container3" style="width:700px;"></div>
+			<div id="container3" >
+				<div id="container3-1" style="padding-left:100px;width:1000px">
+			</div>
 			<div id="container4"></div>
 		</div>
 		<div class="col-sm-6 col-md-6">
-			<div id="container4"></div>
+			<div id="container5"></div>
 		</div>
 
 	</div>
@@ -70,7 +83,7 @@
     var keywords = [["Apple", "Samsung"]];
     var keywords_lower = [["apple", "samsung"]];
 	var depths_of_keyw = [["North Korea"]];
-	var ban_keywords = ['amp', 'sex', 'day', 'today', 'time']
+	var ban_keywords = ['sex', 'time', 'day', 'amp2', 'amp', 'today', 'yesterday', 'tomorrow', 'date']
 
 	var fetch_network_data_from = function (src) {
 	    _ret = []
@@ -305,6 +318,9 @@
 					}
 				}
 			},
+			credits: {
+				enabled: false
+			},
 			exporting: { enabled: false },
 			series: [{
 				dataLabels: {
@@ -340,7 +356,7 @@
 	var sentiment_ts_colors = ['#A469AB', '#9D9D91'];
 	var sentiment_ts_index_each_keyw = {};
 
-    var sentiment_ts_graph = Highcharts.chart('container3', {
+    var sentiment_ts_graph = Highcharts.chart('container3-1', {
 		chart: {
 			scrollablePlotArea: {
             	minWidth: 700
@@ -359,11 +375,11 @@
 			minPadding: 0.2,
             maxPadding: 0.2,
             title: {
-                text: 'Neg/Pos',
+                text: 'Neutral',
                 margin: 10
             },
-			min:-0.25,
-			max:0.25,
+			min:-0.5,
+			max:0.5,
 
 		},
 		credits: {
@@ -427,25 +443,200 @@
 	sentiment_ts_update_label();
 	refresh_sentiment_ts_data();
 
-	var timeout = 1000
 
-	function fetch_tweet_data_periodically(keyword, timeout) {
-		keyword_querystring = 'kw=' + keyword;
+	// Highcharts.chart('container',
+	function get_bar_graph() {
+	    return {
+			chart: {
+				type: 'bar'
+			},
+			title: {
+			    style: { "color": "#70BF97", "fontSize": "14px" },
+				text: ''
+			},
+			xAxis: {
+				categories: [],
+				title: {
+					text: null
+				}
+			},
+			yAxis: {
+				min: 0,
+				title: {
+					text: 'Count',
+					align: 'high'
+				},
+				labels: {
+					overflow: 'justify'
+				}
+			},
+			// tooltip: {
+			// 	valueSuffix: ' millions'
+			// },
+			legend: {
+			    enabled: false
+			},
+			plotOptions: {
+				bar: {
+					dataLabels: {
+						enabled: true
+					}
+				}
+			},
+			credits: {
+				enabled: false
+			},
+			series: [{
+				data: [],
+				color: "#70BF97"
+			}],
+			exporting: {
+				enabled: false
+			}
+		};
+	}
 
-	    $.ajax({
-			url: 'http://localhost:30303/fetch/tweet_table?'+keyword_querystring,
-			type: "GET",
+	function get_pie_chart() {
+	    return Highcharts.chart('container2-2-2', {
+			chart: {
+				type: 'pie'
+			},
+			title: {
+				text: ''
+			},
+			plotOptions: {
+				series: {
+					dataLabels: {
+						enabled: true,
+						format: '{point.name}: {point.y:.1f}%'
+					}
+				}
+			},
+			tooltip: {
+				headerFormat: '<span style="font-size:11px">{series.name}</span><br>',
+				pointFormat: '<span style="color:{point.color}">{point.name}</span>: <b>{point.y:.2f}%</b> of total<br/>'
+			},
+
+			series: [
+				{
+					name: "Sentiment Stats",
+					colorByPoint: true,
+					data: [
+						{
+							name: "Positive",
+							y: 62.74,
+							drilldown: "Positive"
+						}
+					]
+				}
+			],
+			drilldown: {
+				series: [
+					{
+						name: "Positive",
+						id: "Positive",
+						data: [
+							[
+								"v65.0",
+								0.1
+							]
+						]
+					},
+					{
+						name: "Negative",
+						id: "Negative",
+						data: [
+							[
+								"v58.0",
+								1.02
+							]
+						]
+					},
+					{
+						name: "Neutral",
+						id: "Neutral",
+						data: [
+							[
+								"v11.0",
+								6.2
+							]
+						]
+					}
+				]
+			}
+		});
+	}
+
+
+	var bar_charts = [[], []];
+	bar_charts[0].push(Highcharts.chart('container2-2-1-1', get_bar_graph()), Highcharts.chart('container2-2-1-2', get_bar_graph()));
+
+	function refresh_bar_data() {
+	    _keywords = keywords[keywords.length - 1];
+
+		$.ajax({
+			url: 'http://localhost:30303/sentiment/count',
+			type: "POST",
+			// data: JSON.stringify({'keywords': _keywords}),
+			data: JSON.stringify({'keywords': ['apple']}),
+			contentType:"application/json; charset=utf-8",
+		  	dataType:"json",
 			success: function(data) {
-			    _data = JSON.parse(data.data);
-			    _data.forEach(function(mention) {
-			        // apply data into html
+			    var series_cnt = 0;
+				var _data = JSON.parse(data.data);
+
+				_keywords=['apple']
+				_keywords.forEach(function(keyword) {
+					var keyword_idx = 0
+					var bar_data = _data[keyword];
+					var total_cnt = bar_data["total_cnt"];
+					$('#title2-2-1').text('\''+keyword+'\''+' 총 트윗 수: '+total_cnt)
+					var color_set = ["#70BF97", "#CD1946"]
+					sent_contains = ['neg', 'pos']
+                    sent_contains.forEach(function (sent) {
+                        var bar_chart = bar_charts[keyword_idx][series_cnt]
+						var sent_name =  series_cnt == 0? 'Positive' : 'Negative';
+                        var color = color_set[series_cnt]
+                        bar_chart.setTitle({"text": sent_name + " word count", style:{color: color}});
+
+                        var series = bar_chart.series[0];
+                        var xAxis = bar_chart.xAxis[0];
+                        var data_cnt = 0;
+                        var series_data = [];
+                        var categories = [];
+                        bar_data[sent].forEach(function(sent_data) {
+                            categories.push(sent_data['keyword']);
+                            series_data.push(sent_data['val']);
+                        });
+                        series.setData(series_data, false);
+                        series.update({color: color});
+                        xAxis.setCategories(categories, false);
+                        bar_chart.redraw();
+
+                        series_cnt++;
+                    });
 
 
+					/*DELETE THIS*/
+					return;
 				});
-			    setTimeout(fetch_tweet_data_periodically, timeout);
+
+
+
+				// call it again after one second
+				setTimeout(refresh_sentiment_ts_data, 2000);
 			},
 			cache: false
 		});
 	}
+	refresh_bar_data()
+
+	function ttttt(o) {
+	    bar_chart.xAxis[0].update({categories: ['tet1', 'tet2', 'tet3']}, false);
+		bar_chart.series[0].setData([o, 12, 13], false);
+		bar_chart.redraw();
+
+	}
+
 
 </script>
