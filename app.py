@@ -60,6 +60,49 @@ if not app.debug:
     app.logger.addHandler(file_handler)
     app.logger.info('errors')
 
+@app.route('/sentiment/ts', methods=['POST'])
+def post_sentiment_ts_with_keywords():
+    data = json.loads(request.data)
+    keywords = data['keywords']
+    ts_idx_each_keyw = data['ts_idx_each_keyw']
+
+    if type(keywords) != list or len(keywords) == 0:
+        ret = {
+            "code": -1000,
+            "message": "Please serve keyword with your request!!",
+            "data": {}
+        }
+        return json.dumps(ret), 200
+
+    ret_dat = {}
+    for keyword in keywords:
+        ts_idx = 0
+        if keyword in ts_idx_each_keyw:
+            ts_idx = ts_idx_each_keyw[keyword]
+
+        # fetch stats data from mongod
+        db = mongo_cli.usa_db
+        coll = db.usa_tweets_sentiment_ts
+        dat = list(coll.find({"keyword": keyword.lower(), "ts_hundredsec": {'$gt': ts_idx}}).sort('ts_hundredsec', -1).limit(10))
+        ret_dat[keyword] = []
+        for d in dat:
+            ret_dat[keyword].insert(0, {
+                'val': d['pos']/d['total'] - d['neg']/d['total'],
+                'ts': d['ts_hundredsec'],
+            })
+
+    # resp
+    ret = {
+        "code": 1000,
+        "message": "Statistic datum from {}".format(keyword),
+        "data": dumps(ret_dat),
+    }
+    resp = jsonify(ret)
+    resp.headers.add('Access-Control-Allow-Origin', '*')
+
+    return resp, 200
+
+
 @app.route('/fetch/list', methods=['POST'])
 def get_stats_with_keywords():
     data = json.loads(request.data)

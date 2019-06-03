@@ -5,7 +5,7 @@ import time
 import string
 import re
 
-MONGO_HOST = 'mongodb://admin:1234@54.180.145.113'
+MONGO_HOST = 'mongodb://admin:1234@54.180.122.32'
 client = MongoClient(MONGO_HOST)
 db = client.usa_db
 source_collection = db.usa_tweets_collection

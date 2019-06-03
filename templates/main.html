@@ -53,7 +53,8 @@
 
 		</div>
 		<div class="col-sm-6 col-md-6">
-			<div id="container3"></div>
+			<div id="container3" style="width:700px;"></div>
+			<div id="container4"></div>
 		</div>
 		<div class="col-sm-6 col-md-6">
 			<div id="container4"></div>
@@ -142,24 +143,7 @@
 	    associative_net.series[0].options.animation.duration = 10;
 		associative_net.series[0].redraw();
 
-		//
-		// plotOptions: {
-		// 	    animation: {
-        //             duration: 100,
-        //         },
-		// 		networkgraph: {
-		// 			keys: ['from', 'to'],
-		// 			layoutAlgorithm: {
-		// 				enableSimulation: false,
-		// 				friction: -0.9
-		// 			}
-		// 		}
-		// 	},
-		//
-		//
-		//
-	    /*
-
+		/*
 	    var colors = Highcharts.getOptions().colors,
 				i = 0,
 				nodes = {};
@@ -313,8 +297,11 @@
 				networkgraph: {
 					keys: ['from', 'to'],
 					layoutAlgorithm: {
-						enableSimulation: true,
-						friction: -0.9
+						enableSimulation: false,
+						friction: -0.9,
+						gravitationalConstant: 0.1,
+						integration: 'euler',
+						maxIterations: 300
 					}
 				}
 			},
@@ -346,11 +333,119 @@
 		_keywords.push(sortable_scores[2][0]);
 
 		associative_net.setTitle(null, {"text": "current expanding to: " + _keywords.join(", ")});
-		console.log(keywords[keywords.length-1].concat(_keywords))
 
         chart_update(keywords[keywords.length-1].concat(_keywords));
     }, 10000);
 
+	var sentiment_ts_colors = ['#A469AB', '#9D9D91'];
+	var sentiment_ts_index_each_keyw = {};
 
+    var sentiment_ts_graph = Highcharts.chart('container3', {
+		chart: {
+			scrollablePlotArea: {
+            	minWidth: 700
+			}
+		},
+		title: {
+			text: 'Area chart with negative values'
+		},
+		xAxis: {
+            maxZoom: 20 * 1000,
+			visible: false,
+			min:0,
+			max:10
+		},
+		yAxis: {
+			minPadding: 0.2,
+            maxPadding: 0.2,
+            title: {
+                text: 'Neg/Pos',
+                margin: 10
+            },
+			min:-0.25,
+			max:0.25,
+
+		},
+		credits: {
+			enabled: false
+		},
+		series: [{
+			name: 'A',
+			data: [],
+			color: sentiment_ts_colors[0]
+		}, {
+			name: 'B',
+			data: [],
+			color: sentiment_ts_colors[1]
+		}],
+		exporting: {
+		    enabled: false
+		}
+	});
+
+    function sentiment_ts_update_label() {
+        _keywords = keywords[keywords.length - 1];
+        series_cnt = 0
+		_keywords.forEach(function(keyword){
+	        sentiment_ts_graph.series[series_cnt].update({name:keyword}, false);
+	        sentiment_ts_graph.redraw();
+	        series_cnt++;
+		});
+	}
+
+	function refresh_sentiment_ts_data() {
+	    _keywords = keywords[keywords.length - 1];
+
+		$.ajax({
+			url: 'http://localhost:30303/sentiment/ts',
+			type: "POST",
+			data: JSON.stringify({'keywords': _keywords, 'ts_idx_each_keyw': sentiment_ts_index_each_keyw}),
+			contentType:"application/json; charset=utf-8",
+		  	dataType:"json",
+			success: function(data) {
+			    var series_cnt = 0;
+				_data = JSON.parse(data.data);
+
+				_keywords.forEach(function(keyword) {
+					sentiment_data = _data[keyword];
+					var series = sentiment_ts_graph.series[series_cnt];
+					var data_cnt = 0;
+					sentiment_data.forEach(function(sent_data) {
+					    shift = sentiment_ts_graph.series[series_cnt].data.length >= 5;
+					   	series.addPoint([data_cnt++, sent_data['val']], true, false)
+						sentiment_ts_index_each_keyw[keyword] = sent_data['ts']
+					});
+					series_cnt++;
+				});
+
+				// call it again after one second
+				setTimeout(refresh_sentiment_ts_data, 2000);
+			},
+			cache: false
+		});
+	}
+	sentiment_ts_update_label();
+	refresh_sentiment_ts_data();
+
+	var timeout = 1000
+
+	function fetch_tweet_data_periodically(keyword, timeout) {
+		keyword_querystring = 'kw=' + keyword;
+
+	    $.ajax({
+			url: 'http://localhost:30303/fetch/tweet_table?'+keyword_querystring,
+			type: "GET",
+			success: function(data) {
+			    _data = JSON.parse(data.data);
+			    _data.forEach(function(mention) {
+			        // apply data into html
+
+
+				});
+			    setTimeout(fetch_tweet_data_periodically, timeout);
+			},
+			cache: false
+		});
+	}
 
 </script>
