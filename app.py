@@ -167,28 +167,39 @@ def get_stats_with_keywords():
         }
         return json.dumps(ret), 200
 
-    ret_dat = []
+    ret_dat = {}
+    ret_dat['nlp'] = []
+    ret_dat['others'] = []
     denoms_per_dat = {}
 
     for keyword in keywords:
 
         keyword = keyword.lower()
 
-        if keyword not in ["samsung", "north korea", "south korea", "apple"]:
-            # retain keyword expire time
-            redis_cli.set(keyword, keyword)
-            redis_cli.expire(keyword, 40)
-            redis_cli.sadd("keys", keyword)
-            redis_cli.sadd("search", keyword)
+        # if keyword not in ["samsung", "north korea", "south korea", "apple"]:
+        # retain keyword expire time
+        redis_cli.set(keyword, keyword)
+        redis_cli.expire(keyword, 40)
+        redis_cli.sadd("keys", keyword)
+        redis_cli.sadd("search", keyword)
 
-        # fetch stats data from mongod
+        # fetch nlp NN tag data from mongod
         db = mongo_cli.usa_db
         coll = db.usa_tweets_named_exp
-        dat = list(coll.find({"search_word": keyword}, {"search_word": 1, "keyword": 1, "val": 1, "_id": 0}).sort('val', -1).limit(6))
-        denoms_per_dat[keyword] = 0
+        dat = list(coll.find({"search_word": keyword}, {"search_word": 1, "keyword": 1, "val": 1, "_id": 0}).sort('val', -1).limit(4))
+        denoms_per_dat[keyword] = {}
+        denoms_per_dat[keyword]['nlp'] = 0
+        denoms_per_dat[keyword]['others'] = 0
         for i in dat:
-            denoms_per_dat[keyword] = denoms_per_dat[keyword] + i['val']
-        ret_dat += dat
+            denoms_per_dat[keyword]['nlp'] = denoms_per_dat[keyword]['nlp'] + i['val']
+        ret_dat['nlp'] += dat
+
+        # fetch nlp other tag data
+        coll = db.usa_tweets_nlp_others_exp
+        dat = list(coll.find({"search_word": keyword}, {"search_word": 1, "keyword": 1, "val": 1, "_id": 0}).sort('val', -1).limit(4))
+        for i in dat:
+            denoms_per_dat[keyword]['others'] = denoms_per_dat[keyword]['others'] + i['val']
+        ret_dat['others'] += dat
 
     # resp
     ret = {

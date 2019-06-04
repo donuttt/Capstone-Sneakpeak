@@ -93,6 +93,11 @@
 	var depths_of_keyw = [["North Korea"]];
 	var ban_keywords = ['sex', 'time', 'day', 'amp2', 'amp', 'today', 'yesterday', 'tomorrow', 'date', 'first']
 	var src_count = 0;
+	var nlp_others_set = new Set([]);
+	var main_search_sw = 0;
+	let search_expansion_limit = 3;
+	var search_expansion_nomore_list = [];
+	var search_expansion_cnt_list = {};
 
 	var fetch_network_data_from = function (src) {
 	    _ret = []
@@ -114,6 +119,9 @@
 	            for (var idx in src[i][keyword]) {
 	                key = src[i][keyword][idx][0];
 	                val = src[i][keyword][idx][1];
+					if (nlp_others_set.has(key))
+					    continue;
+
 
 	                if (_ret[key] != undefined)
 	                    _ret[key] = _ret[key] + val;
@@ -147,22 +155,34 @@
 	    var curr_keywords = linear_keywords_array();
 		var scores = fetch_network_score_from(ret);
 
+
 	    var colors = Highcharts.getOptions().colors,
 			i = 1;
 
 	    associative_net.series[0].nodes.forEach(function (node) {
 			if (curr_keywords.includes(node.id)) {
 			    node.marker = {
-			        radius: 30
+			        radius: 35
 				};
 			    node.color = colors[i++]
 			} else {
-			    node.marker = {
-			        radius: 50 * scores[node.id] < 20 ? 50 * scores[node.id] : 20
-				};
+			    if (nlp_others_set.has(node.id)) {
+			        node.marker = {
+			      	  radius: 10 * scores[node.id] < 10 ? 10 * scores[node.id] : 10
+					};
+					node.color = colors[5];
+                }
+
+			    else {
+			        node.marker = {
+			      	  radius: 30 * scores[node.id] < 20 ? 30 * scores[node.id] : 20
+					};
+                    node.color = colors[6];
+                }
+
 			}
 		});
-	    associative_net.series[0].options.animation.duration = 10;
+
 		associative_net.series[0].redraw();
 
 		/*
@@ -232,7 +252,7 @@
 					ret[depth-1][key] = [];
 				});
 
-				_data.forEach(function(_d) {
+				_data['nlp'].forEach(function(_d) {
 				    if (ban_keywords.includes(_d.keyword))
 				        return;
 
@@ -240,10 +260,23 @@
 						depths_of_keyw[depth] = [];
 					depths_of_keyw[depth].push(_d.keyword)
 
-					ret[depth-1][_d.search_word].push([_d.keyword, _d.val/denoms[_d.search_word]])
+					ret[depth-1][_d.search_word].push([_d.keyword, _d.val/denoms[_d.search_word]['nlp']])
+				});
+
+				_data['others'].forEach(function(_d) {
+				    if (ban_keywords.includes(_d.keyword))
+				        return;
+
+					if (depths_of_keyw[depth] == undefined)
+						depths_of_keyw[depth] = [];
+					depths_of_keyw[depth].push(_d.keyword)
+
+					nlp_others_set.add(_d.keyword);
+					ret[depth-1][_d.search_word].push([_d.keyword, _d.val/denoms[_d.search_word]['others']])
 				});
 
 			  update_network(fetch_network_data_from(ret))
+			  setTimeout(associate_network_refresh, 5000);
 		  }
 		});
 
@@ -306,7 +339,7 @@
 				height: '50%'
 			},
 			title: {
-				text: 'Word Cluster'
+				text: '검색단어 확장 그래프'
 			},
 			subtitle: {
 			  	text: "주어진 검색어: " + (keywords[keywords.length-1].join(", ")),
@@ -323,7 +356,7 @@
 						friction: -0.9,
 						gravitationalConstant: 0.1,
 						integration: 'euler',
-						maxIterations: 300
+						maxIterations: 2000
 					}
 				}
 			},
@@ -332,6 +365,7 @@
 			},
 			exporting: { enabled: false },
 			series: [{
+				pointPlacement: 'on',
 				dataLabels: {
 					enabled: true,
 					linkFormat: ''
@@ -342,27 +376,59 @@
 
     chart_update(keywords[keywords.length-1]);
 
-    setInterval(function(){
+	function associate_network_refresh() {
         _scores = fetch_network_score_from(ret);
         sortable_scores = []
         for (var key in _scores)
             sortable_scores.push([key, _scores[key]])
 
-		sortable_scores.sort(function(a, b){
-		   return b[1] - a[1];
-		});
+        sortable_scores.sort(function (a, b) {
+            return b[1] - a[1];
+        });
 
+        var i = 0;
         _keywords = [];
-        if (src_count < 100)
-            associative_net.setTitle(null, {"text": "주어진 제시어로 더 검색합니다: " + keywords[keywords.length-1].join(", ")});
-        else {
-            _keywords.push(sortable_scores[0][0]);
-            _keywords.push(sortable_scores[1][0]);
-
-            associative_net.setTitle(null, {"text": "검색어가 확장됩니다: " + _keywords.join(", ")});
+        if (src_count < 100 || main_search_sw == 0) {
+            main_search_sw = 1;
+            associative_net.setTitle(null, {"text": "주어진 제시어로 더 검색합니다: " + keywords[keywords.length - 1].join(", ")});
         }
-        chart_update(keywords[keywords.length-1].concat(_keywords));
-    }, 2000);
+        else {
+            main_search_sw = 0;
+            for (var _ in [0, 1]) {
+                target_keyword = sortable_scores[i][0];
+                while (search_expansion_nomore_list.includes(target_keyword)){
+                    i++;
+                    if (i == sortable_scores.length) {
+                        target_keyword = undefined;
+                        break;
+                    }
+					target_keyword = sortable_scores[i][0];
+				}
+
+				if (target_keyword == undefined) {
+				    i = -1;
+				    break;
+				}
+				i++;
+
+				_keywords.push(target_keyword);
+                if (search_expansion_cnt_list[target_keyword] == undefined)
+                    search_expansion_cnt_list[target_keyword] = 1;
+				else
+				    search_expansion_cnt_list[target_keyword] += 1;
+
+				if (search_expansion_cnt_list[target_keyword] == search_expansion_limit)
+				    search_expansion_nomore_list.push(target_keyword);
+
+			}
+			if (i != -1)
+            	associative_net.setTitle(null, {"text": "검색어가 확장됩니다: " + _keywords.join(", ")});
+			else
+			    associative_net.setTitle(null, {"text": "검색이 완료되었습니다. " + keywords[keywords.length - 1].join(", ")});
+        }
+		if (i != -1)
+        	chart_update(keywords[keywords.length - 1].concat(_keywords));
+    }
 
 	var sentiment_ts_colors = ['#A469AB', '#9D9D91'];
 	var sentiment_ts_index_each_keyw = {};
@@ -374,7 +440,7 @@
 			}
 		},
 		title: {
-			text: 'Area chart with negative values'
+			text: '실시간 검색어 별 성향 (0: 중립)'
 		},
 		xAxis: {
             maxZoom: 20 * 1000,
@@ -432,12 +498,15 @@
 			success: function(data) {
 			    var series_cnt = 0;
 				_data = JSON.parse(data.data);
-
 				_keywords.forEach(function(keyword) {
 					sentiment_data = _data[keyword];
 					var series = sentiment_ts_graph.series[series_cnt];
 					var data_cnt = 0;
+					if (sentiment_data == undefined)
+					    return;
+
 					sentiment_data.forEach(function(sent_data) {
+					    console.log(sent_data)
 					    shift = sentiment_ts_graph.series[series_cnt].data.length >= 5;
 					   	series.addPoint([data_cnt++, sent_data['val']], true, false)
 						sentiment_ts_index_each_keyw[keyword] = sent_data['ts']
@@ -446,7 +515,7 @@
 				});
 
 				// call it again after one second
-				setTimeout(refresh_sentiment_ts_data, 2000);
+				setTimeout(refresh_sentiment_ts_data, 10000);
 			},
 			cache: false
 		});
@@ -570,6 +639,11 @@
 
                 _keywords.forEach(function (keyword) {
                     var bar_data = _data[keyword];
+                    if (bar_data == undefined) {
+                        keyword_idx++;
+                        return;
+                    }
+
                     var total_cnt = bar_data["total_cnt"];
                     var drilldown_data = {};
 					var total_drilldown = {};
