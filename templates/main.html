@@ -184,7 +184,7 @@
 		});
 
 		associative_net.series[0].redraw();
-
+		associative_net.hideLoading();
 		/*
 	    var colors = Highcharts.getOptions().colors,
 				i = 0,
@@ -276,7 +276,7 @@
 				});
 
 			  update_network(fetch_network_data_from(ret))
-			  setTimeout(associate_network_refresh, 5000);
+			  setTimeout(associate_network_refresh, 10000);
 		  }
 		});
 
@@ -377,6 +377,7 @@
     chart_update(keywords[keywords.length-1]);
 
 	function associate_network_refresh() {
+	    associative_net.showLoading('Loading data from server...');
         _scores = fetch_network_score_from(ret);
         sortable_scores = []
         for (var key in _scores)
@@ -455,8 +456,8 @@
                 text: 'Neutral',
                 margin: 10
             },
-			min:-0.5,
-			max:0.5,
+			min:-0.7,
+			max:0.7,
 
 		},
 		credits: {
@@ -488,6 +489,7 @@
 
 	function refresh_sentiment_ts_data() {
 	    _keywords = keywords[keywords.length - 1];
+	    sentiment_ts_graph.showLoading('Loading data from server...');
 
 		$.ajax({
 			url: 'http://54.180.122.32:30303/sentiment/ts',
@@ -513,7 +515,7 @@
 					});
 					series_cnt++;
 				});
-
+				sentiment_ts_graph.hideLoading();
 				// call it again after one second
 				setTimeout(refresh_sentiment_ts_data, 10000);
 			},
@@ -625,6 +627,13 @@
 
 	function refresh_bar_data() {
 	    _keywords = keywords[keywords.length - 1];
+	    bar_charts.forEach(function(chart_list){
+	       chart_list.forEach(function(chart){
+	    		chart.showLoading('Loading data from server...');
+		   })
+		});
+
+
 
 		$.ajax({
 			url: 'http://54.180.122.32:30303/sentiment/count',
@@ -657,7 +666,7 @@
                     sent_contains = ['neg', 'pos']
                     sent_contains.forEach(function (sent) {
                         var bar_chart = bar_charts[keyword_idx][series_cnt]
-						console.log(keyword_idx, series_cnt, sent)
+
                         var sent_name = series_cnt == 0 ? 'Positive' : 'Negative';
                         var color = color_set[series_cnt];
                         bar_chart.setTitle({"text": sent_name + " 단어 수"});
@@ -679,6 +688,7 @@
                         series.setData(series_data, false);
                         series.update({color: color});
                         xAxis.setCategories(categories, false);
+                        bar_chart.hideLoading();
                         bar_chart.redraw();
 
                         series_cnt++;
@@ -721,7 +731,7 @@
 						id: "neg",
 						data: drilldown_data['neg']
 					};
-
+					pie_chart.hideLoading('Loading data from server...');
                     pie_chart.redraw();
 
                     keyword_idx++;
@@ -731,7 +741,7 @@
 		});
 
 		// call it again after one second
-		setTimeout(refresh_bar_data, 3000);
+		setTimeout(refresh_bar_data, 5000);
 	}
 	refresh_bar_data()
 
