@@ -5,6 +5,7 @@ import twitter_credentials2
 import time
 import redis
 from common import Tweetmanager
+import os
 
 LOCATION = [-127.3, 24.1, -65.9, 51.8] #USA coordinates
 
@@ -65,15 +66,24 @@ def fetch_keyw_from(redis_cli):
 
 
 if __name__ == '__main__':
-    MONGO_HOST = 'mongodb://admin:1234@localhost'
+    env = 'dev' if os.getenv('CAPSTONE_DEV_ENV') else 'prod'
+    if env == 'dev':
+        MONGO_HOST = 'mongodb://admin:1234@54.180.122.32/usa_db'
+        MONGO_CLI = MongoClient(MONGO_HOST)
+        REDIS_CLI = redis.Redis(host='54.180.122.32', port=6379, db=0)
+    else:
+        MONGO_HOST = 'mongodb://admin:1234@127.0.0.1/usa_db'
+        MONGO_CLI = MongoClient(MONGO_HOST)
+        REDIS_CLI = redis.Redis(host='127.0.0.1', port=6379, db=0)
+
 
     consumer_key = twitter_credentials2.CONSUMER_KEY
     consumer_secret = twitter_credentials2.CONSUMER_SECRET
     access_token = twitter_credentials2.ACCESS_TOKEN
     access_token_secret = twitter_credentials2.ACCESS_TOKEN_SECRET
 
-    client = MongoClient(MONGO_HOST)
-    redis_cli = redis.Redis(host='localhost', port=6379, db=0)
+    client = MONGO_CLI
+    redis_cli = REDIS_CLI
 
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)

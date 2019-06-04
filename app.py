@@ -1,3 +1,4 @@
+
 #----------------------------------------------------------------------------#
 # Imports
 #----------------------------------------------------------------------------#
@@ -82,11 +83,15 @@ def post_sentiment_count_with_keywords():
         coll = db.usa_tweets_collection
         total_cnt = coll.find({"search_word": {'$in': [keyword, keyword.lower()]}}).count()
 
+        # sentiment percentage
+        coll = db.usa_tweets_sentiment_ts_exp
+        percentage = coll.aggregate([{'$match': {'keyword': keyword}}, {'$group': {'_id': '$keyword', 'neu': {'$sum': '$neu'}, 'pos': {'$sum': '$pos'}, 'neg': {'$sum': '$neg'}, 'total': {'$sum': '$total'}}}])
+
         # fetch stats data from mongod
         coll = db.usa_tweets_sentiment_count_exp
 
-        ret_dat[keyword] = {'total_cnt': total_cnt}
-        for sentiment in ['pos', 'neg']:
+        ret_dat[keyword] = {'total_cnt': total_cnt, 'per': percentage, }
+        for sentiment in ['pos', 'neg', 'neu']:
             dat = list(coll.find({"search_word": keyword, 'sentiment': sentiment, 'tag': {'$nin': tag_list}}).sort('val', -1).limit(10))
             ret_dat[keyword][sentiment] = []
             for d in dat:
@@ -166,8 +171,9 @@ def get_stats_with_keywords():
     denoms_per_dat = {}
 
     for keyword in keywords:
+
         keyword = keyword.lower()
-        print keyword
+
         if keyword not in ["samsung", "north korea", "south korea", "apple"]:
             # retain keyword expire time
             redis_cli.set(keyword, keyword)
@@ -191,6 +197,7 @@ def get_stats_with_keywords():
         "denoms": dumps(denoms_per_dat),
         "data": dumps(ret_dat),
     }
+
     resp = jsonify(ret)
     resp.headers.add('Access-Control-Allow-Origin', '*')
 

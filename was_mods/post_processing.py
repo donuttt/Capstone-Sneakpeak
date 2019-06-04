@@ -37,7 +37,7 @@ class PostProcessing:
         self.sentiment_count_coll = self.db.usa_tweets_sentiment_count_exp
         self.nlp_named_coll = self.db.usa_tweets_named_exp
         self.sentiment_ts_coll = self.db.usa_tweets_sentiment_ts_exp
-        self.plus_stop_words = ['sex', 'time', 'day', 'amp2', 'amp', 'today', 'yesterday', 'tomorrow', 'date']
+        self.plus_stop_words = ['sex', 'time', 'day', 'amp2', 'amp', 'today', 'yesterday', 'tomorrow', 'date', 'first']
 
     def stop(self):
         self.stopping = True
@@ -79,8 +79,10 @@ class PostProcessing:
         while not self.stopping:
             start_time = time.time()
             src = self.fetch()
+            process_cnt = 0
 
             for doc in src:
+                process_cnt = process_cnt + 1
                 self.src_coll.update_one({'_id': doc['_id']}, {'$set': {'nlp_flag': 4}})
 
                 search_word = doc['search_word']
@@ -96,6 +98,9 @@ class PostProcessing:
                 self.process_named_entity(nes, search_word)
                 sentiment = self.process_sentiment(search_word, mention, timestamp_ms)
                 self.process_normal_nlp_and_sentiment_count(clean_tokens, search_word, sentiment)
+
+            if process_cnt == 0:
+                time.sleep(5)
 
             print("end processing time: {0:.1f}".format(time.time() - start_time))
 
