@@ -342,7 +342,7 @@
 				text: '검색단어 확장 그래프'
 			},
 			subtitle: {
-			  	text: "주어진 검색어: " + (keywords[keywords.length-1].join(", ")),
+			  	text: "주어진 검색어: " + (keywords[keywords.length-1].join(", ")) + "<br/> (노랑: 명사어구, 빨강: 형용어구)",
 				style: {"fontSize": "14px"}
 			},
 			plotOptions: {
@@ -377,6 +377,7 @@
     chart_update(keywords[keywords.length-1]);
 
 	function associate_network_refresh() {
+	    var additional_subtitle = "<br/> (노랑: 명사어구, 빨강: 형용어구)"
 	    associative_net.showLoading('Loading data from server...');
         _scores = fetch_network_score_from(ret);
         sortable_scores = []
@@ -391,7 +392,7 @@
         _keywords = [];
         if (src_count < 100 || main_search_sw == 0) {
             main_search_sw = 1;
-            associative_net.setTitle(null, {"text": "주어진 제시어로 더 검색합니다: " + keywords[keywords.length - 1].join(", ")});
+            associative_net.setTitle(null, {"text": "주어진 제시어로 더 검색합니다: " + keywords[keywords.length - 1].join(", ") + additional_subtitle});
         }
         else {
             main_search_sw = 0;
@@ -423,9 +424,9 @@
 
 			}
 			if (i != -1)
-            	associative_net.setTitle(null, {"text": "검색어가 확장됩니다: " + _keywords.join(", ")});
+            	associative_net.setTitle(null, {"text": "검색어가 확장됩니다: " + _keywords.join(", ") + additional_subtitle });
 			else
-			    associative_net.setTitle(null, {"text": "검색이 완료되었습니다. " + keywords[keywords.length - 1].join(", ")});
+			    associative_net.setTitle(null, {"text": "검색이 완료되었습니다. " + keywords[keywords.length - 1].join(", ") + additional_subtitle });
         }
 		if (i != -1)
         	chart_update(keywords[keywords.length - 1].concat(_keywords));
