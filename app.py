@@ -172,6 +172,12 @@ def get_stats_with_keywords():
     ret_dat['others'] = []
     denoms_per_dat = {}
 
+    named_limit = 4
+    nlp_limit = 3
+    if 'ret_limit' in data:
+        named_limit = 2
+        nlp_limit = 1
+
     for keyword in keywords:
 
         keyword = keyword.lower()
@@ -186,7 +192,7 @@ def get_stats_with_keywords():
         # fetch nlp NN tag data from mongod
         db = mongo_cli.usa_db
         coll = db.usa_tweets_named_exp
-        dat = list(coll.find({"search_word": keyword}, {"search_word": 1, "keyword": 1, "val": 1, "_id": 0}).sort('val', -1).limit(4))
+        dat = list(coll.find({"search_word": keyword}, {"search_word": 1, "keyword": 1, "val": 1, "_id": 0}).sort('val', -1).limit(named_limit))
         denoms_per_dat[keyword] = {}
         denoms_per_dat[keyword]['nlp'] = 0
         denoms_per_dat[keyword]['others'] = 0
@@ -196,7 +202,7 @@ def get_stats_with_keywords():
 
         # fetch nlp other tag data
         coll = db.usa_tweets_nlp_others_exp
-        dat = list(coll.find({"search_word": keyword}, {"search_word": 1, "keyword": 1, "val": 1, "_id": 0}).sort('val', -1).limit(4))
+        dat = list(coll.find({"search_word": keyword}, {"search_word": 1, "keyword": 1, "val": 1, "_id": 0}).sort('val', -1).limit(nlp_limit))
         for i in dat:
             denoms_per_dat[keyword]['others'] = denoms_per_dat[keyword]['others'] + i['val']
         ret_dat['others'] += dat
