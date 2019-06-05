@@ -167,20 +167,20 @@
 	    associative_net.series[0].nodes.forEach(function (node) {
 			if (curr_keywords.includes(node.id)) {
 			    node.marker = {
-			        radius: 35
+			        radius: 20
 				};
 			    node.color = colors[i++]
 			} else {
 			    if (nlp_others_set.has(node.id)) {
 			        node.marker = {
-			      	  radius: 10 * scores[node.id] < 10 ? 10 * scores[node.id] : 10
+			      	  radius: 5 * scores[node.id] < 5 ? 5 * scores[node.id] : 5
 					};
 					node.color = colors[5];
                 }
 
 			    else {
 			        node.marker = {
-			      	  radius: 30 * scores[node.id] < 20 ? 30 * scores[node.id] : 20
+			      	  radius: 15 * scores[node.id] < 10 ? 15 * scores[node.id] : 10
 					};
                     node.color = colors[6];
                 }
