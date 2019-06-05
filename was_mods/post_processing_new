@@ -37,7 +37,7 @@ class PostProcessing:
         self.sentiment_count_coll = self.db.usa_tweets_sentiment_count_exp
         self.nlp_named_coll = self.db.usa_tweets_named_exp
         self.sentiment_ts_coll = self.db.usa_tweets_sentiment_ts_exp
-        self.plus_stop_words = ['sex', 'time', 'day', 'amp2', 'amp', 'today']
+        self.plus_stop_words = ['sex', 'time', 'day', 'amp2', 'amp', 'today', 'yesterday', 'tomorrow', 'date', 'first']
 
     def stop(self):
         self.stopping = True
@@ -79,9 +79,11 @@ class PostProcessing:
         while not self.stopping:
             start_time = time.time()
             src = self.fetch()
+            process_cnt = 0
 
             for doc in src:
-		self.src_coll.update_one({'_id': doc['_id']}, {'$set': {'nlp_flag': 4}})
+                process_cnt = process_cnt + 1
+                self.src_coll.update_one({'_id': doc['_id']}, {'$set': {'nlp_flag': 4}})
 
                 search_word = doc['search_word']
                 mention = doc['mention']
@@ -89,11 +91,16 @@ class PostProcessing:
                 if search_word in self.plus_stop_words:
                     continue
 
+
+
                 clean_tokens, nes = self.cleansing(search_word, mention)
 
                 self.process_named_entity(nes, search_word)
                 sentiment = self.process_sentiment(search_word, mention, timestamp_ms)
                 self.process_normal_nlp_and_sentiment_count(clean_tokens, search_word, sentiment)
+
+            if process_cnt == 0:
+                time.sleep(5)
 
             print("end processing time: {0:.1f}".format(time.time() - start_time))
 
@@ -144,12 +151,6 @@ class PostProcessing:
     def process_sentiment(self, search_word, mention, timestamp_ms):
         print ("processing... {}".format(search_word))
 
-        if timestamp_ms == "-1":
-            return 0
-
-        #
-        # datetime = datetime.utcfromtimestamp(int(doc['timestamp_ms'][:10])).strftime("%Y.%m.%d.")
-        _datetime_100sec = int(timestamp_ms[:8] + '00')
         ss = self.sid.polarity_scores(mention)
         neu_score = ss['neu']
         neg_score = ss['neg']
@@ -160,11 +161,17 @@ class PostProcessing:
                          'total': 1}
                     }
 
-        self.sentiment_ts_coll.find_one_and_update(
-            {'keyword': search_word, 'ts_hundredsec': _datetime_100sec},
-            update_q,
-            new=True, upsert=True
-        )
+
+        #
+        # datetime = datetime.utcfromtimestamp(int(doc['timestamp_ms'][:10])).strftime("%Y.%m.%d.")
+        if timestamp_ms != "-1":
+            _datetime_100sec = int(timestamp_ms[:8] + '00')
+
+            self.sentiment_ts_coll.find_one_and_update(
+                {'keyword': search_word, 'ts_hundredsec': _datetime_100sec},
+                update_q,
+                new=True, upsert=True
+            )
 
         if compound_score <= 0.2:
             return 'neg'
