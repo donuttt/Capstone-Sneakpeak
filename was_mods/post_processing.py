@@ -151,12 +151,6 @@ class PostProcessing:
     def process_sentiment(self, search_word, mention, timestamp_ms):
         print ("processing... {}".format(search_word))
 
-        if timestamp_ms == "-1":
-            return 0
-
-        #
-        # datetime = datetime.utcfromtimestamp(int(doc['timestamp_ms'][:10])).strftime("%Y.%m.%d.")
-        _datetime_100sec = int(timestamp_ms[:8] + '00')
         ss = self.sid.polarity_scores(mention)
         neu_score = ss['neu']
         neg_score = ss['neg']
@@ -167,11 +161,17 @@ class PostProcessing:
                          'total': 1}
                     }
 
-        self.sentiment_ts_coll.find_one_and_update(
-            {'keyword': search_word, 'ts_hundredsec': _datetime_100sec},
-            update_q,
-            new=True, upsert=True
-        )
+
+        #
+        # datetime = datetime.utcfromtimestamp(int(doc['timestamp_ms'][:10])).strftime("%Y.%m.%d.")
+        if timestamp_ms != "-1":
+            _datetime_100sec = int(timestamp_ms[:8] + '00')
+
+            self.sentiment_ts_coll.find_one_and_update(
+                {'keyword': search_word, 'ts_hundredsec': _datetime_100sec},
+                update_q,
+                new=True, upsert=True
+            )
 
         if compound_score <= 0.2:
             return 'neg'
