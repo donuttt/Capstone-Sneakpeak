@@ -14,7 +14,7 @@ import time
 import re
 nltk.downloader.download('vader_lexicon')
 
-MONGO_HOST = 'mongodb://admin:1234@54.180.122.32/usa_db'
+MONGO_HOST = 'mongodb://admin:1234@localhost/usa_db'
 client = MongoClient(MONGO_HOST)
 db = client.usa_db
 
