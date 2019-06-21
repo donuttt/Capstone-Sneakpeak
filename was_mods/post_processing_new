@@ -14,7 +14,7 @@ import time
 import re
 nltk.downloader.download('vader_lexicon')
 
-MONGO_HOST = 'mongodb://admin:1234@localhost/usa_db'
+MONGO_HOST = 'mongodb://admin:1234@54.180.122.32/usa_db'
 client = MongoClient(MONGO_HOST)
 db = client.usa_db
 
@@ -44,7 +44,8 @@ class PostProcessing:
 
     def fetch(self):
         print ("Fetch 1000 items.")
-        return self.src_coll.find({"nlp_flag": 0}).limit(1000)
+
+        return self.src_coll.find({"nlp_flag": 0}, {'_id':1, 'mention':1, 'search_word':1, 'timestamp_ms':1}).limit(1000)
 
     def cleansing(self, search_word, mention):
         ret = []
@@ -87,7 +88,7 @@ class PostProcessing:
 
                 search_word = doc['search_word']
                 mention = doc['mention']
-                timestamp_ms = doc['timestamp_ms']
+                timestamp_ms = doc['timestamp_ms'] if 'timestamp_ms' in doc else "-1"
                 if search_word in self.plus_stop_words:
                     continue
 
