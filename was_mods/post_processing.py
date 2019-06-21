@@ -44,7 +44,8 @@ class PostProcessing:
 
     def fetch(self):
         print ("Fetch 1000 items.")
-        return self.src_coll.find({"nlp_flag": 3}).limit(1000)
+
+        return self.src_coll.find({"nlp_flag": 0}, {'_id':1, 'mention':1, 'search_word':1, 'timestamp_ms':1}).limit(1000)
 
     def cleansing(self, search_word, mention):
         ret = []
@@ -87,11 +88,9 @@ class PostProcessing:
 
                 search_word = doc['search_word']
                 mention = doc['mention']
-                timestamp_ms = doc['timestamp_ms']
+                timestamp_ms = doc['timestamp_ms'] if 'timestamp_ms' in doc else "-1"
                 if search_word in self.plus_stop_words:
                     continue
-
-
 
                 clean_tokens, nes = self.cleansing(search_word, mention)
 

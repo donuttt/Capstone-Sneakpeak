@@ -12,6 +12,8 @@ import redis
 from bson.json_util import dumps
 import os
 from configs.config import config_via_env
+from was_mods.search_crawler import SearchCrawler
+import pymongo.errors
 
 #----------------------------------------------------------------------------#
 # App Config.
@@ -250,6 +252,64 @@ def get_stats_with_keyword():
         "message": "Statistic datum from {}".format(keyword),
         "keyword": keyword,
         "data": dumps(dat)
+    }
+    resp = jsonify(ret)
+    resp.headers.add('Access-Control-Allow-Origin', '*')
+
+    return resp, 200
+
+@app.route('/crawl', methods=['GET'])
+def crawling_data_with():
+    keyword = request.args.get('k')
+    if keyword is None or keyword == "":
+        ret = {
+            "code": -1000,
+            "message": "Please serve keyword with your request!!",
+            "data": {}
+        }
+        return json.dumps(ret), 200
+
+    target_blog = ['medium', 'reddit', 'google-nws', 'pinterest']
+    db = mongo_cli.usa_db
+    src_coll = db.usa_tweets_collection
+    image_coll = db.usa_image_collection
+
+    for target in target_blog:
+        datum = SearchCrawler(target, keyword).crawl(5)
+        if target == 'pinterest':
+            for data in datum:
+                _i = {
+                    '_id': data['hashed_url'],
+                    'url': data['img_src_url'],
+                    'img': data['img'],
+                    'hashurl': data['hashed_url'],
+                }
+                try:
+                    ret = image_coll.insert_one(_i)
+
+                except pymongo.errors.DuplicateKeyError:
+                    print("Key duplicated")
+        else:
+            for data in datum:
+                _i = {
+                    'id_str': data['hashed_url'],
+                    'mention': data['title'] + ' ' + data['text'],
+                    'target': target,
+                    'search_word': keyword,
+                    'nlp_flag': 0,
+                    'hashurl': data['hashed_url'],
+                }
+                try:
+                    ret = src_coll.insert_one(_i)
+
+                except pymongo.errors.DuplicateKeyError as e:
+                    print("Key duplicated")
+
+    # resp
+    ret = {
+        "code": 1000,
+        "message": "Finally crawling finished.".format(keyword),
+        "keyword": keyword
     }
     resp = jsonify(ret)
     resp.headers.add('Access-Control-Allow-Origin', '*')
