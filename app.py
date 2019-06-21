@@ -282,6 +282,7 @@ def crawling_data_with():
                     '_id': data['hashed_url'],
                     'url': data['img_src_url'],
                     'img': data['img'],
+                    'search_word': keyword.lower(),
                     'hashurl': data['hashed_url'],
                 }
                 try:
@@ -294,8 +295,9 @@ def crawling_data_with():
                 _i = {
                     'id_str': data['hashed_url'],
                     'mention': data['title'] + ' ' + data['text'],
+                    'url': data['url'],
                     'target': target,
-                    'search_word': keyword,
+                    'search_word': keyword.lower(),
                     'nlp_flag': 0,
                     'hashurl': data['hashed_url'],
                 }
