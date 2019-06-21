@@ -106,6 +106,8 @@
 <script type="text/javascript">
     $('input#search1').val('Apple');
     $('input#search2').val('Samsung');
+	request_new_crawling_with('Apple');
+	request_new_crawling_with('Samsung');
 
 	var ret = [];
     var linear_type_resp = [];
@@ -129,10 +131,12 @@
     	if (search1 != undefined || search1 != '') {
     	    new_keyword.push(search1)
 			new_keyword_lower.push(search1.toLowerCase())
+			request_new_crawling_with(search1)
 		}
 		if (search2 != undefined|| search2 != '') {
     	    new_keyword.push(search2)
 			new_keyword_lower.push(search2.toLowerCase())
+			request_new_crawling_with(search2)
 		}
 
 		if (new_keyword.length != 0) {
@@ -144,6 +148,12 @@
 
     	    sentiment_ts_update_label();
 		}
+	}
+
+	function request_new_crawling_with(keyword) {
+		$.getJSON('http://54.180.122.32:30303/crawl?k=' + keyword, function (data) {
+			console.log(data);
+		});
 	}
 
 	var fetch_network_data_from = function (src) {
