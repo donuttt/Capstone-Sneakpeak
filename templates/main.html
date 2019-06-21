@@ -151,7 +151,7 @@
 	        for (var keyword in src[i]) {
 	            for (var idx in src[i][keyword]) {
 	                if (!ban_keywords.includes(src[i][keyword][idx][0]))
-	                    if (keywords[keywords.length-1].includes(keyword))
+	                    if (keywords_lower[keywords.length-1].includes(keyword))
 	                    	_ret.push([keyword, src[i][keyword][idx][0], 100]);//, src[i][keyword][idx][1]]);
 						else
 						    _ret.push([keyword, src[i][keyword][idx][0], 1]);
@@ -185,7 +185,7 @@
 
 	var linear_keywords_array = function() {
 	    var _ret = [];
-	    keywords.forEach(function(_d) {
+	    keywords_lower.forEach(function(_d) {
 	        _ret = _ret.concat(_d);
 	        // _d.forEach(function(s) {
 	        // 	_ret.push(s.toLowerCase());
@@ -544,7 +544,7 @@
 	}
 
 	function refresh_sentiment_ts_data() {
-	    _keywords = keywords[keywords.length - 1];
+	    _keywords = keywords_lower[keywords.length - 1];
 	    sentiment_ts_graph.showLoading('Loading data from server...');
 
 		$.ajax({
@@ -682,7 +682,7 @@
 	bar_charts[1].push(Highcharts.chart('container2-2-2-1', get_bar_graph()), Highcharts.chart('container2-2-2-2', get_bar_graph()), Highcharts.chart('container2-2-2-3', get_pie_chart()));
 
 	function refresh_bar_data() {
-	    _keywords = keywords[keywords.length - 1];
+	    _keywords = keywords_lower[keywords.length - 1];
 	    bar_charts.forEach(function(chart_list){
 	       chart_list.forEach(function(chart){
 	    		chart.showLoading('Loading data from server...');
