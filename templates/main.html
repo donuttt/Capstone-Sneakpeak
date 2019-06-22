@@ -24,6 +24,13 @@
 <script src="https://code.highcharts.com/maps/modules/map.js"></script>
 <script src="https://code.highcharts.com/mapdata/custom/world.js"></script>
 <script src="https://code.highcharts.com/modules/wordcloud.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script type="text/javascript" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/123941/masonry.js"></script>
+<script type="text/javascript" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/123941/imagesLoaded.js"></script>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" integrity="sha384-aUGj/X2zp5rLCbBxumKTCw2Z50WgIr1vs/PFN4praOTvYXWlVyh2UtNUU0KAUhAX" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
 
 <style>
 #asso_net {
@@ -36,17 +43,51 @@
   	margin: 0 auto;
 	height:300px;
 }
+.main-container {
+  padding: 10px 15px;
+}
+.glyphicon-refresh-animate {
+    -animation: spin .7s infinite linear;
+    -webkit-animation: spin2 .7s infinite linear;
+}
+
+@-webkit-keyframes spin2 {
+    from { -webkit-transform: rotate(0deg);}
+    to { -webkit-transform: rotate(360deg);}
+}
+
+@keyframes spin {
+    from { transform: scale(1) rotate(0deg);}
+    to { transform: scale(1) rotate(360deg);}
+}
+
+#radioBtn .notActive{
+    color: #000000;
+    background-color: #ffffcc;
+}
 
 </style>
 
-<div class="containerr">
-	<div class="row">
-		<div class="col-sm-6 col-md-6">
+<div class="container">
+	<div>
+		<div>
 			<div id="container1" style="text-align:center;margin-bottom: 10px;margin-top: 40px">
 				<h style="color:#333333;font-size:22px;fill:#333333;">피핑 톰 프로젝트</h>
 				<br>
-				<text x="1272" text-anchor="middle" class="highcharts-subtitle" data-z-index="4" style="color:#666666;fill:#666666;" y="46"><tspan>Source: Twitter Inc</tspan></text>
+				<!--<text x="1272" text-anchor="middle" class="highcharts-subtitle" data-z-index="4" style="color:#666666;fill:#666666;" y="46"><tspan>Source: Twitter Inc</tspan></text>-->
 			</div>
+			<div class="row">
+				<div class="col-sm-12" align="center">
+					<div class="input-group">
+						<div id="radioBtn" class="btn-group">
+							<a class="btn btn-primary btn-sm active" data-toggle="search" data-title="one">단어 검색</a>
+							<a class="btn btn-primary btn-sm notActive" data-toggle="search" data-title="multi">비교 검색</a>
+						</div>
+						<input type="hidden" name="happy" id="happy">
+					</div>
+				</div>
+			</div>
+
 			<div class="inner-form" style="display: flex;margin-left: 25%; width: 60%; padding: 10px; align-items: center; margin-bottom: 10px;">
 
 				<div id="1-2-1" style="margin-right: 10px;argin-top:0px;text-align: center;font-size: 18px;font-weight: bold;">검색: </div>
@@ -62,7 +103,7 @@
 			</div>
 		</div>
 
-		<div class="col-sm-6 col-md-6" style="height: 1200px">
+		<div class='data-form' style="height: 1100px">
 			<div id="container2" style='text-align: center;width:100%'>
                 <div id="asso_net"></div>
             </div>
@@ -90,24 +131,48 @@
 			</div>
 
 		</div>
-		<div class="col-sm-6 col-md-6">
+		<div>
 			<div id="container3" style="width: 100%">
-				<div id="container3-1" style="width:1000px; display: table; margin: 0 auto;">
+				<div id="container3-1" style="width:1000px; display: table; margin: 0 auto;"></div>
 			</div>
 			<div id="container4"></div>
 		</div>
-		<div class="col-sm-6 col-md-6">
+		<div>
 			<div id="container5"></div>
 		</div>
 
 	</div>
+
+	<button class="btn btn-sm btn-warning"><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> Loading...</button>
+
+	<div class="row masonry-container">
+	</div>
+
 </div>
 
 <script type="text/javascript">
     $('input#search1').val('Apple');
     $('input#search2').val('Samsung');
-	request_new_crawling_with('Apple');
-	request_new_crawling_with('Samsung');
+	$('#radioBtn a').on('click', function(){
+		var sel = $(this).data('title');
+		var tog = $(this).data('toggle');
+		$('#'+tog).prop('value', sel);
+
+		$('a[data-toggle="'+tog+'"]').not('[data-title="'+sel+'"]').removeClass('active').addClass('notActive');
+		$('a[data-toggle="'+tog+'"][data-title="'+sel+'"]').removeClass('notActive').addClass('active');
+
+		if (sel == 'one') {
+		  $(".data-form").css("height","770px");
+		  $(".first-wrap").css("width", "62%");
+		  $(".second-wrap").css("display", "none");
+		  $("#search2").val('');
+		} else {
+		  $(".data-form").css("height","1100px");
+		  $(".first-wrap").css("width", "30%");
+		  $(".second-wrap").css("display", "block");
+		}
+		click_search();
+	});
 
 	var ret = [];
     var linear_type_resp = [];
@@ -121,22 +186,35 @@
 	let search_expansion_limit = 3;
 	var search_expansion_nomore_list = [];
 	var search_expansion_cnt_list = {};
+	var images = [];
+
+	request_image_with('apple');
+    request_image_with('samsung');
+	$('.btn-warning').hide();
 
 	function click_search() {
         search1 = $('input#search1').val();
     	search2 = $('input#search2').val();
 
-    	new_keyword = []
-		new_keyword_lower = []
-    	if (search1 != undefined || search1 != '') {
-    	    new_keyword.push(search1)
-			new_keyword_lower.push(search1.toLowerCase())
-			request_new_crawling_with(search1)
+    	new_keyword = [];
+		new_keyword_lower = [];
+		images = [];
+		sentiment_ts_index_each_keyw = {};
+		sentiment_ts_graph.series[0].setData([]);
+		sentiment_ts_graph.series[1].setData([]);
+
+		remove_image_all();
+
+    	if (search1 != undefined && search1 != '') {
+    	    new_keyword.push(search1);
+			new_keyword_lower.push(search1.toLowerCase());
+			request_new_crawling_with(search1);
+
 		}
-		if (search2 != undefined|| search2 != '') {
-    	    new_keyword.push(search2)
-			new_keyword_lower.push(search2.toLowerCase())
-			request_new_crawling_with(search2)
+		if (search2 != undefined && search2 != '') {
+    	    new_keyword.push(search2);
+			new_keyword_lower.push(search2.toLowerCase());
+			request_new_crawling_with(search2);
 		}
 
 		if (new_keyword.length != 0) {
@@ -146,14 +224,73 @@
     	    keywords_lower.push(new_keyword_lower);
     	    ret = [];
 
+    	    var additional_subtitle = "<br/> (노랑: 명사어구, 빨강: 형용어구)";
+			associative_net.showLoading('Loading data from server...');
+    	    associative_net.setTitle(null, {"text": "주어진 검색어: " + keywords[keywords.length - 1].join(", ") + additional_subtitle});
+    	    refresh_bar_data(false);
     	    sentiment_ts_update_label();
+    	    chart_update(keywords[keywords.length-1], 0, false);
 		}
 	}
 
 	function request_new_crawling_with(keyword) {
 		$.getJSON('http://54.180.122.32:30303/crawl?k=' + keyword, function (data) {
-			console.log(data);
+			request_image_with(keyword.toLowerCase());
 		});
+	}
+
+	function request_image_with(keyword) {
+	    if (keywords[0].includes(keyword) || keywords_lower[0].includes(keyword)) {
+            $.getJSON('http://54.180.122.32:30303/image?k=' + keyword, function (data) {
+                data = JSON.parse(data.data);
+
+                data.forEach(function (img) {
+                    insert_image_with(img['img'], img['url']);
+                });
+            });
+        }
+	}
+
+	function remove_image_all() {
+	    $('.btn-warning').show();
+	    $('div').remove('.image-container');
+	}
+
+	function insert_image_with(url, img_url) {
+	    var tag = '<div class="col-xs-6 col-sm-3 col-md-3 item image-container"> <div class="thumbnail"> <img src="'+ url +'" onclick="open_url(\''+ img_url +'\');" alt=""> </div> </div>';
+		$('.masonry-container').append(tag);
+		update_image();
+	}
+
+	function update_image() {
+		$('.btn-warning').hide();
+
+	     var $container = $('.masonry-container');
+		  $container.imagesLoaded( function () {
+			$container.masonry({
+			  columnWidth: '.item',
+			  itemSelector: '.item'
+			});
+		  });
+
+		  $('a[data-toggle=tab]').each(function () {
+			var $this = $(this);
+
+			$this.on('shown.bs.tab', function () {
+
+			  $container.imagesLoaded( function () {
+				$container.masonry({
+				  columnWidth: '.item',
+				  itemSelector: '.item'
+				});
+			  });
+
+			});
+		  });
+	}
+
+	function open_url(url){
+	     window.open(url);
 	}
 
 	var fetch_network_data_from = function (src) {
@@ -198,9 +335,6 @@
 	    var _ret = [];
 	    keywords_lower.forEach(function(_d) {
 	        _ret = _ret.concat(_d);
-	        // _d.forEach(function(s) {
-	        // 	_ret.push(s.toLowerCase());
-			// });
 		});
 	    return _ret;
 	};
@@ -221,20 +355,20 @@
 	    associative_net.series[0].nodes.forEach(function (node) {
 			if (curr_keywords.includes(node.id)) {
 			    node.marker = {
-			        radius: 20
+			        radius: 25
 				};
 			    node.color = colors[i++]
 			} else {
 			    if (nlp_others_set.has(node.id)) {
 			        node.marker = {
-			      	  radius: 5 * scores[node.id] < 5 ? 5 * scores[node.id] : 5
+			      	  radius: 7 * scores[node.id] < 7 ? 7 * scores[node.id] : 7
 					};
 					node.color = colors[5];
                 }
 
 			    else {
 			        node.marker = {
-			      	  radius: 15 * scores[node.id] < 10 ? 15 * scores[node.id] : 10
+			      	  radius: 17 * scores[node.id] < 10 ? 17 * scores[node.id] : 17
 					};
                     node.color = colors[6];
                 }
@@ -244,41 +378,9 @@
 
 		associative_net.series[0].redraw();
 		associative_net.hideLoading();
-		/*
-	    var colors = Highcharts.getOptions().colors,
-				i = 0,
-				nodes = {};
-			// e.options.data.forEach(function (link) {
-			// 	if (link[0] === 'Samsung') {
-			// 	    console.log("??????????")
-			// 		nodes['Proto Indo-European'] = {
-			// 			id: 'Proto Indo-European',
-			// 			marker: {
-			// 				radius: 20
-			// 			}
-			// 		};
-			// 		nodes[link[1]] = {
-			// 			id: link[1],
-			// 			marker: {
-			// 				radius: 10
-			// 			},
-			// 			color: colors[i++]
-			// 		};
-			// 	} else if (nodes[link[0]] && nodes[link[0]].color) {
-			// 		nodes[link[1]] = {
-			// 			id: link[1],
-			// 			color: nodes[link[0]].color
-			// 		};
-			// 	}
-			// });
-
-			e.options.nodes = Object.keys(nodes).map(function (id) {
-				return nodes[id];
-			});
-	     */
     };
 
-    var chart_update = function (_keywords, ret_limit) {
+    var chart_update = function (_keywords, ret_limit, auto_update) {
 		var depth = 0;
         for (var i in depths_of_keyw) {
             if (depths_of_keyw[i].find(function(keyword){
@@ -338,37 +440,11 @@
 					ret[depth-1][_d.search_word].push([_d.keyword, _d.val/denoms[_d.search_word]['others']])
 				});
 
-			  update_network(fetch_network_data_from(ret))
-			  setTimeout(associate_network_refresh, 10000);
+			  update_network(fetch_network_data_from(ret));
+			  if (auto_update)
+			  	setTimeout(associate_network_refresh, 60000);
 		  }
 		});
-
-		//
-		// for (key_idx in ll_keys) {
-        //     $.getJSON('http://54.180.122.32:30303/fetch?k=' + ll_keys[key_idx], function (data) {
-        //         _keyw = data.keyword
-		// 		data = JSON.parse(data.data);
-		//
-		// 		resp_data = []
-        //         src_total_val = 0;
-        //         for (i in data) {
-        //             if (depths_of_keyw[depth] == undefined)
-        //                 depths_of_keyw[depth] = [];
-        //             depths_of_keyw[depth].push(data[i].keyword)
-		//
-        //             src_total_val += data[i].val;
-        //             resp_data.push([data[i].keyword, data[i].val]);
-        //             // ret.push([keyword, data[i].keyword, data[i].val])
-        //         }
-		//
-        //         for (var i in resp_data) {
-        //             resp_data[i][1] = resp_data[i][1] / src_total_val
-        //         }
-        //         ret[depth - 1][_keyw] = resp_data;
-		//
-		// 		update_network(fetch_network_data_from(ret));
-        //     });
-        // }
 	};
 
     var click_network_keyword = function (event) {
@@ -409,18 +485,19 @@
 				style: {"fontSize": "14px"}
 			},
 			plotOptions: {
-			    animation: {
-                    duration: 100,
-                },
 				networkgraph: {
 					keys: ['from', 'to', 'weight'],
 					layoutAlgorithm: {
-						enableSimulation: false,
-						friction: -0.9,
-						gravitationalConstant: 0.1,
-						integration: 'euler',
-						maxIterations: 2000
+						enableSimulation: true,
+						friction: -0.9
 					}
+					// layoutAlgorithm: {
+					// 	enableSimulation: false,
+					// 	friction: -0.9,
+					// 	gravitationalConstant: 0.1,
+					// 	integration: 'euler',
+					// 	maxIterations: 2000
+					// }
 				}
 			},
 			credits: {
@@ -431,13 +508,16 @@
 				pointPlacement: 'on',
 				dataLabels: {
 					enabled: true,
-					linkFormat: ''
+					linkFormat: '',
+					style: {
+						fontSize: '14px'
+					}
 				},
 				data: []
 			}]
 		});
 
-    chart_update(keywords[keywords.length-1], 0);
+    chart_update(keywords[keywords.length-1], 0, true);
 
 	function associate_network_refresh() {
 	    var additional_subtitle = "<br/> (노랑: 명사어구, 빨강: 형용어구)"
@@ -495,7 +575,7 @@
 			    associative_net.setTitle(null, {"text": "검색이 완료되었습니다. " + keywords[keywords.length - 1].join(", ") + additional_subtitle });
         }
 		if (i != -1)
-        	chart_update(keywords[keywords.length - 1].concat(_keywords), ret_limit);
+        	chart_update(keywords[keywords.length - 1].concat(_keywords), ret_limit, true);
     }
 
 	var sentiment_ts_colors = ['#A469AB', '#9D9D91'];
@@ -547,6 +627,8 @@
     function sentiment_ts_update_label() {
         _keywords = keywords[keywords.length - 1];
         series_cnt = 0
+		sentiment_ts_graph.series[0].update({name:''}, false);
+        sentiment_ts_graph.series[1].update({name:''}, false);
 		_keywords.forEach(function(keyword){
 	        sentiment_ts_graph.series[series_cnt].update({name:keyword}, false);
 	        sentiment_ts_graph.redraw();
@@ -575,10 +657,9 @@
 					    return;
 
 					sentiment_data.forEach(function(sent_data) {
-					    console.log(sent_data)
 					    shift = sentiment_ts_graph.series[series_cnt].data.length >= 5;
-					   	series.addPoint([data_cnt++, sent_data['val']], true, false)
-						sentiment_ts_index_each_keyw[keyword] = sent_data['ts']
+					   	series.addPoint([data_cnt++, sent_data['val']], true, false);
+						sentiment_ts_index_each_keyw[keyword] = sent_data['ts'];
 					});
 					series_cnt++;
 				});
@@ -591,7 +672,6 @@
 	}
 	sentiment_ts_update_label();
 	refresh_sentiment_ts_data();
-
 
 	// Highcharts.chart('container',
 	function get_bar_graph() {
@@ -692,15 +772,13 @@
 	bar_charts[0].push(Highcharts.chart('container2-2-1-1', get_bar_graph()), Highcharts.chart('container2-2-1-2', get_bar_graph()), Highcharts.chart('container2-2-1-3', get_pie_chart()));
 	bar_charts[1].push(Highcharts.chart('container2-2-2-1', get_bar_graph()), Highcharts.chart('container2-2-2-2', get_bar_graph()), Highcharts.chart('container2-2-2-3', get_pie_chart()));
 
-	function refresh_bar_data() {
+	function refresh_bar_data(auto_update) {
 	    _keywords = keywords_lower[keywords.length - 1];
 	    bar_charts.forEach(function(chart_list){
 	       chart_list.forEach(function(chart){
 	    		chart.showLoading('Loading data from server...');
 		   })
 		});
-
-
 
 		$.ajax({
 			url: 'http://54.180.122.32:30303/sentiment/count',
@@ -725,7 +803,7 @@
 					var total_drilldown = {};
 					var series_cnt = 0;
 
-                    $('#title2-2-'+(keyword_idx+1).toString()).text('\'' + keyword + '\'' + ' 총 트윗 수: ' + total_cnt)
+                    $('#title2-2-'+(keyword_idx+1).toString()).text('\'' + keyword + '\'' + ' 총 데이터 수: ' + total_cnt)
 					src_count += total_cnt;
 
                     var color_set = ["#70BF97", "#CD1946"]
@@ -807,10 +885,13 @@
 			cache: false
 		});
 
-		// call it again after one second
-		setTimeout(refresh_bar_data, 5000);
+		if (auto_update) {
+            setTimeout(function() {
+    			refresh_bar_data(true);
+			}, 5000);
+        }
 	}
-	refresh_bar_data()
+	refresh_bar_data(true);
 
 	function ttttt(o) {
 	    bar_chart.xAxis[0].update({categories: ['tet1', 'tet2', 'tet3']}, false);
@@ -818,6 +899,5 @@
 		bar_chart.redraw();
 
 	}
-
 
 </script>
