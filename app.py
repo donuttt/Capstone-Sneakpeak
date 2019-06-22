@@ -27,13 +27,14 @@ app.config.from_object(config_via_env[env])
 mongo_cli = app.config['MONGO_CLI']
 redis_cli = app.config['REDIS_CLI']
 
+
 #----------------------------------------------------------------------------#
 # Controllers.
 #----------------------------------------------------------------------------#
-
 @app.route('/')
 def home():
     return render_template('main.html')
+
 
 @app.route('/test', methods=['GET', 'POST'])
 def test_method():
@@ -42,6 +43,7 @@ def test_method():
         "data": {"p":"q"}
     }
     return json.dumps(ret), 200
+
 
 @app.errorhandler(500)
 def internal_error(error):
@@ -53,6 +55,7 @@ def internal_error(error):
 def not_found_error(error):
     return render_template('errors/404.html'), 404
 
+
 if not app.debug:
     file_handler = FileHandler('error.log')
     file_handler.setFormatter(
@@ -62,6 +65,7 @@ if not app.debug:
     file_handler.setLevel(logging.INFO)
     app.logger.addHandler(file_handler)
     app.logger.info('errors')
+
 
 @app.route('/sentiment/count', methods=['POST'])
 def post_sentiment_count_with_keywords():
@@ -80,6 +84,7 @@ def post_sentiment_count_with_keywords():
 
     ret_dat = {}
     for keyword in keywords:
+        keyword = keyword.lower();
         db = mongo_cli.usa_db
         # src total count
         coll = db.usa_tweets_collection
@@ -174,8 +179,8 @@ def get_stats_with_keywords():
     ret_dat['others'] = []
     denoms_per_dat = {}
 
-    named_limit = 4
-    nlp_limit = 3
+    named_limit = 6
+    nlp_limit = 4
     if 'ret_limit' in data:
         named_limit = 2
         nlp_limit = 1
@@ -258,6 +263,7 @@ def get_stats_with_keyword():
 
     return resp, 200
 
+
 @app.route('/crawl', methods=['GET'])
 def crawling_data_with():
     keyword = request.args.get('k')
@@ -312,6 +318,36 @@ def crawling_data_with():
         "code": 1000,
         "message": "Finally crawling finished.".format(keyword),
         "keyword": keyword
+    }
+    resp = jsonify(ret)
+    resp.headers.add('Access-Control-Allow-Origin', '*')
+
+    return resp, 200
+
+
+@app.route('/image', methods=['GET'])
+def get_image_with():
+    keyword = request.args.get('k')
+    if keyword is None or keyword == "":
+        ret = {
+            "code": -1000,
+            "message": "Please serve keyword with your request!!",
+            "data": {}
+        }
+        return json.dumps(ret), 200
+
+    keyword = keyword.lower()
+
+    db = mongo_cli.usa_db
+    image_coll = db.usa_image_collection
+    dat = image_coll.find({"search_word": keyword}, {"img": 1, "url": 1, "_id": 0}).sort('_id', -1).limit(10)
+
+    # resp
+    ret = {
+        "code": 1000,
+        "message": "Statistic datum from {}".format(keyword),
+        "keyword": keyword,
+        "data": dumps(dat)
     }
     resp = jsonify(ret)
     resp.headers.add('Access-Control-Allow-Origin', '*')
