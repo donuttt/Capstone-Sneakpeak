@@ -23,14 +23,12 @@ class StreamListener(tweepy.StreamListener):
     def stop(self):
         self.stoping = True
 
-
     def on_connect(self):
         print("You are now connected to the streaming API with K: {0}".format(map(str, self.keywords)))
 
     def on_error(self, status_code):
         print('An Error has occured: ' + repr(status_code))
         return False
-
 
     def on_data(self, data):
         try:

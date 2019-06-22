@@ -35,7 +35,7 @@ class SearchCrawler:
             'medium': 'https://medium.com/search?q=',
             'google-nws': 'https://www.google.com/search?q={}&tbm=nws&lr=lang_en',
             'reddit': 'https://www.reddit.com/search/?q={}&t=week',
-            'pinterest': 'https://www.pinterest.co.kr/resource/BaseSearchResource/get/?source_url=%2Fsearch%2Fpins%2F%3Fq%3D{0}%26rs%3Dtyped&data=%7B"options"%3A%7B"isPrefetch"%3Afalse%2C"query"%3A"{0}"%2C"scope"%3A"pins"%7D%2C"context"%3A%7B%7D%7D&_=1561092495673',
+            'pinterest': 'https://www.pinterest.com/resource/BaseSearchResource/get/?source_url=%2Fsearch%2Fpins%2F%3Fq%3D{0}%26rs%3Dtyped&data=%7B"options"%3A%7B"isPrefetch"%3Afalse%2C"query"%3A"{0}"%2C"scope"%3A"pins"%7D%2C"context"%3A%7B%7D%7D&_=1561092495673',
         }
         self.keyw = keyw
 
@@ -84,9 +84,13 @@ class SearchCrawler:
 
             for data in response_json['resource_response']['data']['results']:
                 imgs = data['images']
-                if '236x' in imgs:
-                    img = imgs['236x']['url']
+                if '170x' in imgs:
+                    img = imgs['170x']['url']
                     img_src_url = data['link']
+                    if img_src_url is not None:
+                        hashed_url = hashlib.md5(img_src_url).hexdigest()
+                    else:
+                        hashed_url = hashlib.md5(img).hexdigest()
 
                     crawl_datas.append({
                         'title': '',
@@ -94,7 +98,7 @@ class SearchCrawler:
                         'img': img,
                         'img_src_url': img_src_url,
                         'text': '',
-                        'hashed_url': hashlib.md5(img_src_url).hexdigest(),
+                        'hashed_url': hashed_url,
                         'type': 'image'
                     })
 
@@ -248,9 +252,9 @@ class SearchCrawler:
 if __name__ == '__main__':
     start_time = time.time()
 
-    print SearchCrawler('medium', 'samsung').crawl(5)
-    print SearchCrawler('reddit', 'samsung').crawl(5)
-    print SearchCrawler('google-nws', 'samsung').crawl(5)
+    # print SearchCrawler('medium', 'samsung').crawl(5)
+    # print SearchCrawler('reddit', 'samsung').crawl(5)
+    # print SearchCrawler('google-nws', 'samsung').crawl(5)
     print SearchCrawler('pinterest', 'samsung').crawl(5)
 
     print("end processing time: {0:.1f}".format(time.time() - start_time))
