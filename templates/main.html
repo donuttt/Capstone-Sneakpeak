@@ -80,8 +80,8 @@
 				<div class="col-sm-12" align="center">
 					<div class="input-group">
 						<div id="radioBtn" class="btn-group">
-							<a class="btn btn-primary btn-sm active" data-toggle="search" data-title="one">단어 검색</a>
-							<a class="btn btn-primary btn-sm notActive" data-toggle="search" data-title="multi">비교 검색</a>
+							<a class="btn btn-primary btn-sm notActive" data-toggle="search" data-title="one">단어 검색</a>
+							<a class="btn btn-primary btn-sm active" data-toggle="search" data-title="multi">비교 검색</a>
 						</div>
 						<input type="hidden" name="happy" id="happy">
 					</div>
@@ -235,6 +235,7 @@
 
 	function request_new_crawling_with(keyword) {
 		$.getJSON('http://54.180.122.32:30303/crawl?k=' + keyword, function (data) {
+			chart_update(keywords[keywords.length-1], 0, false);
 			request_image_with(keyword.toLowerCase());
 		});
 	}
