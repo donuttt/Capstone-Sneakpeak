@@ -184,6 +184,7 @@
 	var nlp_others_set = new Set([]);
 	var main_search_sw = 0;
 	let search_expansion_limit = 3;
+	var curr_search_exp_cnt = 0;
 	var search_expansion_nomore_list = [];
 	var search_expansion_cnt_list = {};
 	var images = [];
@@ -199,6 +200,12 @@
     	new_keyword = [];
 		new_keyword_lower = [];
 		images = [];
+		search_expansion_cnt_list = 0;
+		search_expansion_nomore_list = [];
+		search_expansion_cnt_list = {};
+		nlp_others_set = new Set([]);
+		main_search_sw = 0;
+		
 		sentiment_ts_index_each_keyw = {};
 		sentiment_ts_graph.series[0].setData([]);
 		sentiment_ts_graph.series[1].setData([]);
@@ -521,6 +528,12 @@
     chart_update(keywords[keywords.length-1], 0, true);
 
 	function associate_network_refresh() {
+	    curr_search_exp_cnt++;
+	    if (curr_search_exp_cnt > 6) {
+	        associative_net.setTitle(null, {"text": "검색이 완료되었습니다. " + keywords[keywords.length - 1].join(", ") + additional_subtitle });
+	        return;
+		}
+
 	    var additional_subtitle = "<br/> (노랑: 명사어구, 빨강: 형용어구)"
 	    associative_net.showLoading('Loading data from server...');
         _scores = fetch_network_score_from(ret);
@@ -576,7 +589,7 @@
 			    associative_net.setTitle(null, {"text": "검색이 완료되었습니다. " + keywords[keywords.length - 1].join(", ") + additional_subtitle });
         }
 		if (i != -1)
-        	chart_update(keywords[keywords.length - 1].concat(_keywords), ret_limit, true);
+        	chart_update(keywords[keywords.length - 1].concat(_keywords), 0, true);
     }
 
 	var sentiment_ts_colors = ['#A469AB', '#9D9D91'];
