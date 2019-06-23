@@ -782,7 +782,7 @@
 		});
 
 		$.ajax({
-			url: 'http://54.180.122.32:30303/sentiment/count',
+			url: 'http://localhost:30303/sentiment/count',
 			type: "POST",
 			data: JSON.stringify({'keywords': _keywords}),
 			contentType:"application/json; charset=utf-8",
@@ -804,7 +804,7 @@
 					var total_drilldown = {};
 					var series_cnt = 0;
 
-                    $('#title2-2-'+(keyword_idx+1).toString()).text('\'' + keyword + '\'' + ' 총 데이터 수: ' + total_cnt)
+                    $('#title2-2-'+(keyword_idx+1).toString()).text('\'' + keyword + '\'' + ' 수집된 데이터 수: ' + total_cnt)
 					src_count += total_cnt;
 
                     var color_set = ["#70BF97", "#CD1946"]

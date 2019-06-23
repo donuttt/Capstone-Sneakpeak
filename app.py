@@ -87,8 +87,11 @@ def post_sentiment_count_with_keywords():
         keyword = keyword.lower();
         db = mongo_cli.usa_db
         # src total count
-        coll = db.usa_tweets_collection
-        total_cnt = coll.find({"search_word": {'$in': [keyword, keyword.lower()]}}).count()
+        coll = db.usa_tweets_sentiment_count_exp
+        cnts = coll.aggregate([{'$match': {'search_word': keyword}}, {'$group': {'_id': '$search_word', 'total': {'$sum': '$val'}}}])
+        total_cnt = 0
+        for cnt in cnts:
+            total_cnt = cnt['total']
 
         # sentiment percentage
         coll = db.usa_tweets_sentiment_ts_exp
