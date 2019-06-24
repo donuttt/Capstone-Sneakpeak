@@ -1,6 +1,6 @@
 
-[![License MIT](https://img.shields.io/badge/License-MIT-red.svg)]
-[![License MIT](https://img.shields.io/badge/data-web-blue.svg)]
+![License MIT](https://img.shields.io/badge/License-MIT-red.svg)
+![License MIT](https://img.shields.io/badge/data-web-blue.svg)
 
 # Peeping Tom
 제시된 검색어로부터 Social Media 에서 데이터를 수집하여, real-time으로 유저에게 분석된 결과를 보여주는 연구 프로젝트입니다.
@@ -30,11 +30,11 @@ templates/main.html: 서버 주소 변경
 
 ___
 ### References
-[spacy](https://github.com/explosion/spaCy) [![License MIT](https://img.shields.io/badge/License-MIT-red.svg)]
-[nltk](https://github.com/nltk/nltk) [![License Apache2.0](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)]
-[tweepy](https://github.com/tweepy/tweepy) [![License MIT](https://img.shields.io/badge/License-MIT-red.svg)]
-[beautifulsoup](https://www.crummy.com/software/BeautifulSoup/) [![License MIT](https://img.shields.io/badge/License-CC-orange.svg)]
-[flask](http://flask.pocoo.org/docs/1.0/) [![License MIT](https://img.shields.io/badge/License-BSD-brightgreen.svg)]
-[mongodb](https://www.mongodb.com)
-[highchart](https://www.highcharts.com)
+* [spacy](https://github.com/explosion/spaCy) ![License MIT](https://img.shields.io/badge/License-MIT-red.svg)
+* [nltk](https://github.com/nltk/nltk) ![License Apache2.0](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)
+* [tweepy](https://github.com/tweepy/tweepy) ![License MIT](https://img.shields.io/badge/License-MIT-red.svg)
+* [beautifulsoup](https://www.crummy.com/software/BeautifulSoup/) ![License MIT](https://img.shields.io/badge/License-CC-orange.svg)
+* [flask](http://flask.pocoo.org/docs/1.0/) ![License MIT](https://img.shields.io/badge/License-BSD-brightgreen.svg)
+* [mongodb](https://www.mongodb.com)
+* [highchart](https://www.highcharts.com)
 
