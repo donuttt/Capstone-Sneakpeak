@@ -16,7 +16,7 @@ Jinja2==2.10.1
 jsonschema==2.6.0
 MarkupSafe==1.1.1
 murmurhash==1.0.2
-nltk==3.4.1
+nltk==3.4.5
 numpy==1.16.3
 oauthlib==3.0.1
 pathlib==1.0.1
